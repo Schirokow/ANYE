@@ -1,19 +1,20 @@
 package org.example.anye.data
 
-import android.util.Log
+
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.example.anye.HttpService
+import org.example.anye.logMessage
 
 
 // Data Classes für die Ticketmaster API-Antwort
-// Dies sind die gleichen Data Classes wie zuvor, nur das Paket ist jetzt korrekt.
 @Serializable
 data class TicketmasterSearchResponse(
     val _embedded: EmbeddedEvents? = null,
@@ -119,31 +120,6 @@ data class PageInfo(
     val number: Int
 )
 
-//class TicketmasterApiService(private val context: Context) {
-//    private val BASE_URL = "https://app.ticketmaster.com/discovery/v2/"
-//
-//    private val API_KEY: String by lazy {
-//        context.getString(R.string.ticketmaster_api_key)
-//    }
-//
-//    suspend fun searchEvents(
-//        query: String? = null,
-//        city: String? = null,
-//        countryCode: String? = null, // NEU: Optionaler countryCode Parameter
-//        page: Int = 0,
-//        pageSize: Int = 20
-//    ): TicketmasterSearchResponse {
-//        return KtorClient.httpClient.get("${BASE_URL}events.json") {
-//            parameter("apikey", API_KEY)
-//            query?.let { parameter("keyword", it) }
-//            city?.let { parameter("city", it) }
-//            countryCode?.let { parameter("countryCode", it) } // NEU: countryCode zur Anfrage hinzufügen
-//            parameter("page", page)
-//            parameter("size", pageSize)
-//            // Optional: Land, z.B. für Deutschland: parameter("countryCode", "DE")
-//        }.body()
-//    }
-//}
 
 private val BASE_URL = "https://app.ticketmaster.com/discovery/v2/"
 
@@ -180,7 +156,7 @@ suspend fun getEventById(eventId: String): TicketmasterEvent? {
             response
         }
     } catch (e: Exception) {
-        Log.e("TicketmasterApiService", "Error loading event with ID $eventId: ${e.message}")
+        logMessage("TicketmasterApiService, Error loading event with ID $eventId: ${e.message}")
         null
     }
 }
