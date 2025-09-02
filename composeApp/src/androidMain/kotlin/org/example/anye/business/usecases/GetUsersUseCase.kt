@@ -1,8 +1,8 @@
 package org.example.anye.business.usecases
 
+import kotlinx.coroutines.flow.Flow
 import org.example.anye.data.User
 import org.example.anye.data.UsersRepositoryImpl
-import kotlinx.coroutines.flow.Flow
 
 class GetUsersUseCase {
     private val users = UsersRepositoryImpl()

@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.example.anye.data.FavoriteRepository
 import android.util.Log
-import org.example.anye.business.usecases.GetEventByIdUseCase
-import org.example.anye.business.usecases.GetEventsUseCase
+import org.example.anye.usecases.GetEventByIdUseCase
+import org.example.anye.usecases.GetEventsUseCase
 import org.example.anye.data.TicketmasterEvent
 import kotlinx.coroutines.flow.firstOrNull
 

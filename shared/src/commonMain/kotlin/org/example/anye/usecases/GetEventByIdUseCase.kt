@@ -1,8 +1,8 @@
-package org.example.anye.business.usecases
+package org.example.anye.usecases
 
+import kotlinx.coroutines.flow.Flow
 import org.example.anye.data.EventByIdImplFlow
 import org.example.anye.data.TicketmasterEvent
-import kotlinx.coroutines.flow.Flow
 
 class GetEventByIdUseCase {
     private val event = EventByIdImplFlow()

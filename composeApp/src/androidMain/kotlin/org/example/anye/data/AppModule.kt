@@ -3,8 +3,8 @@ package org.example.anye.data
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import org.example.anye.business.usecases.GetEventByIdUseCase
-import org.example.anye.business.usecases.GetEventsUseCase
+import org.example.anye.usecases.GetEventByIdUseCase
+import org.example.anye.usecases.GetEventsUseCase
 import org.example.anye.presentation.viewmodels.ContentDetailViewModel
 import org.example.anye.presentation.viewmodels.FavoriteViewModel
 import org.example.anye.presentation.viewmodels.HomeViewModel

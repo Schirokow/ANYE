@@ -3,7 +3,7 @@ package org.example.anye.presentation.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import org.example.anye.business.usecases.GetEventsUseCase
+import org.example.anye.usecases.GetEventsUseCase
 import org.example.anye.data.FavoriteRepository
 import org.example.anye.data.TicketmasterEvent
 import kotlinx.coroutines.flow.MutableStateFlow
