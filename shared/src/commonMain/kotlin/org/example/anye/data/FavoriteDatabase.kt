@@ -8,7 +8,3 @@ import org.example.anye.data.dao.FavoriteDao
 abstract class FavoriteDatabase : RoomDatabase() {
     abstract fun favoriteDao(): FavoriteDao
 }
-
-//Erklärung:
-//@Database(entities = [Favorite::class], version = 1) definiert die Datenbank mit der favorites-Tabelle.
-//favoriteDao() stellt das DAO für die favorites-Tabelle bereit.

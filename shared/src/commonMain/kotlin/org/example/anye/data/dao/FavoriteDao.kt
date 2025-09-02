@@ -4,8 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import org.example.anye.data.Favorite
 import kotlinx.coroutines.flow.Flow
+import org.example.anye.data.Favorite
 
 @Dao
 interface FavoriteDao {
@@ -24,9 +24,3 @@ interface FavoriteDao {
     @Query("DELETE FROM favorites")
     suspend fun deleteAllFavorites()
 }
-
-//Erklärung:
-//insertFavorite: Fügt eine festivalId zur favorites-Tabelle hinzu.
-//deleteFavorite: Entfernt eine festivalId aus der favorites-Tabelle.
-//getAllFavorites: Gibt alle favorisierten festivalIds als Flow zurück.
-//isFavorite: Überprüft, ob eine festivalId in der favorites-Tabelle existiert.
