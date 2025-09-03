@@ -52,9 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import org.example.anye.data.AppModule
 
-import org.example.anye.presentation.viewmodels.HomeViewModel
+import org.example.anye.viewmodels.HomeViewModel
 import org.example.anye.ui.components.buttons.ClickButton
 import org.example.anye.ui.components.card.NewEventCard
 import org.example.anye.ui.menu.AnyeBottomBar
@@ -69,6 +68,7 @@ import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
 import org.example.anye.data.TicketmasterEvent
+import org.koin.androidx.compose.koinViewModel
 
 
 // Startseite
@@ -80,7 +80,7 @@ fun HomeScreen(navController: NavController){
 //    val viewModel: HomeViewModel = viewModel()
 
     val context = LocalContext.current
-    val viewModel: HomeViewModel = viewModel(factory = AppModule.provideHomeViewModelFactory(context))
+    val viewModel: HomeViewModel = koinViewModel<HomeViewModel>()
     var showDeleteDialog by remember { mutableStateOf(false) }
     val isLoading by viewModel.isLoading.collectAsState()
     val coroutineScope = rememberCoroutineScope()

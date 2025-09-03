@@ -39,8 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import org.example.anye.data.AppModule
-import org.example.anye.presentation.viewmodels.ContentDetailViewModel
+import org.example.anye.viewmodels.ContentDetailViewModel
 import org.example.anye.ui.components.buttons.ClickButton
 import org.example.anye.ui.menu.AnyeBottomBar
 import coil.compose.AsyncImage
@@ -49,6 +48,8 @@ import android.net.Uri
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
+import org.example.anye.viewmodels.HomeViewModel
+import org.koin.androidx.compose.koinViewModel
 
 
 @Composable
@@ -59,7 +60,8 @@ fun ContentDetailScreen(navController: NavController, id: String){
 //    val viewModel: ContentDetailViewModel = viewModel()
 
     val context = LocalContext.current
-    val viewModel: ContentDetailViewModel = viewModel(factory = AppModule.provideDetailViewModelFactory(context))
+
+    val viewModel: ContentDetailViewModel = koinViewModel<ContentDetailViewModel>()
 
     LaunchedEffect(id) {
         Log.d(TAG, "Loading festival for id: $id")

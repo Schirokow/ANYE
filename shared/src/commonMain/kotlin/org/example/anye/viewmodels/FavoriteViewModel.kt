@@ -1,17 +1,18 @@
-package org.example.anye.presentation.viewmodels
+package org.example.anye.viewmodels
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import org.example.anye.data.Favorite
 import org.example.anye.data.FavoriteRepository
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.rickclephas.kmp.observableviewmodel.ViewModel
+import com.rickclephas.kmp.observableviewmodel.stateIn
+import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
+import com.rickclephas.kmp.observableviewmodel.launch
+import com.rickclephas.kmp.observableviewmodel.launch
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import android.util.Log
-import org.example.anye.data.Favorite
+import org.example.anye.logMessage
 
 class FavoriteViewModel(private val favoriteRepository: FavoriteRepository) : ViewModel() {
-    private val _favoriteEvents = MutableStateFlow<List<Favorite>>(emptyList())
+    private val _favoriteEvents = MutableStateFlow<List<Favorite>>(viewModelScope,emptyList())
     val favoriteEvents: StateFlow<List<Favorite>> = _favoriteEvents.asStateFlow()
 
     init {
@@ -27,10 +28,10 @@ class FavoriteViewModel(private val favoriteRepository: FavoriteRepository) : Vi
             try {
                 if (favoriteRepository.isFavorite(favoriteEvent.eventId)) {
                     favoriteRepository.removeFavorite(favoriteEvent.eventId)
-                    Log.i("FavoriteViewModel", "Removed favorite: ${favoriteEvent.eventId}")
+                    logMessage("FavoriteViewModel: Removed favorite: ${favoriteEvent.eventId}")
                 }
             } catch (e: Exception) {
-                Log.e("FavoriteViewModel", "Error toggling favorite: ${e.message}")
+                logMessage("FavoriteViewModel: Error toggling favorite: ${e.message}")
             }
         }
     }
@@ -40,9 +41,9 @@ class FavoriteViewModel(private val favoriteRepository: FavoriteRepository) : Vi
             try {
                 favoriteRepository.deleteAllFavorites()
                 _favoriteEvents.value = emptyList() // UI sofort aktualisieren
-                Log.i("FavoriteViewModel", "All favorites deleted")
+                logMessage("FavoriteViewModel: All favorites deleted")
             } catch (e: Exception) {
-                Log.e("FavoriteViewModel", "Error deleting all favorites: ${e.message}")
+                logMessage("FavoriteViewModel: Error deleting all favorites: ${e.message}")
             }
         }
     }

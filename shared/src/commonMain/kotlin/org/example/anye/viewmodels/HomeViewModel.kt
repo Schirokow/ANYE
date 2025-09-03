@@ -1,26 +1,27 @@
-package org.example.anye.presentation.viewmodels
+package org.example.anye.viewmodels
 
-import android.util.Log
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import org.example.anye.usecases.GetEventsUseCase
 import org.example.anye.data.FavoriteRepository
 import org.example.anye.data.TicketmasterEvent
-import kotlinx.coroutines.flow.MutableStateFlow
+import org.example.anye.usecases.GetEventsUseCase
+import com.rickclephas.kmp.observableviewmodel.ViewModel
+import com.rickclephas.kmp.observableviewmodel.stateIn
+import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
+import com.rickclephas.kmp.observableviewmodel.launch
+import com.rickclephas.kmp.observableviewmodel.launch
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-
+import org.example.anye.logMessage
 
 class HomeViewModel(
-    val favoriteRepository: FavoriteRepository
+    val favoriteRepository: FavoriteRepository,
+    private val getEventsUseCase: GetEventsUseCase
 ) : ViewModel() {
-    private val getEventsUseCase: GetEventsUseCase = GetEventsUseCase()
 
-    private val _isLoading = MutableStateFlow(false)
+
+    private val _isLoading = MutableStateFlow(viewModelScope,false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _eventsData = MutableStateFlow<List<TicketmasterEvent>>(emptyList())
+    private val _eventsData = MutableStateFlow<List<TicketmasterEvent>>(viewModelScope,emptyList())
     val eventsData: StateFlow<List<TicketmasterEvent>> = _eventsData.asStateFlow()
 
 
@@ -39,9 +40,9 @@ class HomeViewModel(
             try {
 //                festivalRepository.deleteAllFestivals()
                 _eventsData.value = emptyList()
-                Log.i("HomeViewModel", "All festivals deleted")
+                logMessage("HomeViewModel: All festivals deleted")
             } catch (e: Exception) {
-                Log.e("HomeViewModel", "Error deleting festivals: ${e.message}")
+                logMessage("HomeViewModel: Error deleting festivals: ${e.message}")
             }
         }
     }
@@ -51,17 +52,14 @@ class HomeViewModel(
             try {
                 if (favoriteRepository.isFavorite(event.id)) {
                     favoriteRepository.removeFavorite(event.id)
-                    Log.i("HomeViewModel", "Removed favorite: ${event.id}")
+                    logMessage("HomeViewModel: Removed favorite: ${event.id}")
                 } else {
                     favoriteRepository.addFavorite(event)
-                    Log.i("HomeViewModel", "Added favorite: ${event.id}")
+                    logMessage("HomeViewModel: Added favorite: ${event.id}")
                 }
             } catch (e: Exception) {
-                Log.e("HomeViewModel", "Error toggling favorite: ${e.message}")
+                logMessage("HomeViewModel: Error toggling favorite: ${e.message}")
             }
         }
     }
 }
-
-
-

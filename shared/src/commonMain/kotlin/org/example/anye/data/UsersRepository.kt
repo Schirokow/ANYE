@@ -2,7 +2,7 @@ package org.example.anye.data
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import org.example.anye.R
+//import org.example.anye.R
 
 
 data class User(
@@ -10,7 +10,7 @@ data class User(
     val name: String,
     val email: String,
     val password: String,
-    val profilePicture: Int = R.drawable.default_avatar
+//    val profilePicture: Int = R.drawable.default_avatar
 )
 
 
@@ -32,7 +32,7 @@ private var users = mutableListOf<User>(
         name = "Anna",
         email = "anna@test.de",
         password = "123456",
-        profilePicture = R.drawable.avatar2
+//        profilePicture = R.drawable.avatar2
     ),
     User(
         id = 4,
@@ -49,13 +49,13 @@ fun usersDataFlow(): Flow<List<User>> = flow {
 interface UsersRepository {
     fun getUsersFlow(): Flow<List<User>>
     fun getUserByIdFlow(id: Int): Flow<User?>
-}
 
-interface AddUser{
     fun addUser(user: User)
 }
 
-class UsersRepositoryImpl : UsersRepository, AddUser {
+
+
+class UsersRepositoryImpl : UsersRepository {
 
     // Hier käme normalerweise API/Datenbank-Zugriff
     override fun getUsersFlow(): Flow<List<User>> = usersDataFlow()

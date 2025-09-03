@@ -1,29 +1,31 @@
-package org.example.anye.presentation.viewmodels
+package org.example.anye.viewmodels
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import org.example.anye.data.FavoriteRepository
-import android.util.Log
+import org.example.anye.data.TicketmasterEvent
 import org.example.anye.usecases.GetEventByIdUseCase
 import org.example.anye.usecases.GetEventsUseCase
-import org.example.anye.data.TicketmasterEvent
+import com.rickclephas.kmp.observableviewmodel.ViewModel
+import com.rickclephas.kmp.observableviewmodel.stateIn
+import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
+import com.rickclephas.kmp.observableviewmodel.launch
+import com.rickclephas.kmp.observableviewmodel.launch
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
+import org.example.anye.logMessage
 
 class ContentDetailViewModel(
     private val favoriteRepository: FavoriteRepository,
-    private val eventsUseCase: GetEventsUseCase
+    private val eventsUseCase: GetEventsUseCase,
+    private val getEventByIdUseCase: GetEventByIdUseCase
 ) : ViewModel() {
 
-    private val getEventByIdUseCase: GetEventByIdUseCase = GetEventByIdUseCase()
 
-    private val _event = MutableStateFlow<TicketmasterEvent?>(null)
+
+    private val _event = MutableStateFlow<TicketmasterEvent?>(viewModelScope,null)
     val event: StateFlow<TicketmasterEvent?> = _event.asStateFlow()
 
-    private val _isFavorite = MutableStateFlow(false)
+    private val _isFavorite = MutableStateFlow(viewModelScope,false)
     val isFavorite: StateFlow<Boolean> = _isFavorite.asStateFlow()
 
 
@@ -34,7 +36,7 @@ class ContentDetailViewModel(
                 val eventData = getEventByIdUseCase.getEventByIdFlow(id).firstOrNull()
                 _event.value = eventData
             } catch (e: Exception) {
-                Log.e("ContentDetailViewModel", "Error loading event: ${e.message}")
+                logMessage("ContentDetailViewModel: Error loading event: ${e.message}")
                 _event.value = null
             }
         }
@@ -46,14 +48,14 @@ class ContentDetailViewModel(
                 if (favoriteRepository.isFavorite(event.id)) {
                     favoriteRepository.removeFavorite(event.id)
                     _isFavorite.value = false
-                    Log.i("ContentDetailViewModel", "Removed favorite: ${event.id}")
+                    logMessage("ContentDetailViewModel: Removed favorite: ${event.id}")
                 } else {
                     favoriteRepository.addFavorite(event)
                     _isFavorite.value = true
-                    Log.i("ContentDetailViewModel", "Added favorite: ${event.id}")
+                    logMessage("ContentDetailViewModel: Added favorite: ${event.id}")
                 }
             } catch (e: Exception) {
-                Log.e("ContentDetailViewModel", "Error toggling favorite: ${e.message}")
+                logMessage("ContentDetailViewModel: Error toggling favorite: ${e.message}")
             }
         }
     }

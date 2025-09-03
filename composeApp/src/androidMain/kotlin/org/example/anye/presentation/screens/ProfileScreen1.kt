@@ -56,29 +56,28 @@ import org.example.anye.ui.components.card.EventCard
 import org.example.anye.ui.menu.AnyeBottomBar
 import com.example.evoo.ui.theme.colorthemetype.BottomDarkBlue
 import com.example.evoo.ui.theme.colorthemetype.TopLightBlue
-import org.example.anye.presentation.viewmodels.Profile1ViewModel
+import org.example.anye.viewmodels.Profile1ViewModel
 import org.example.anye.AccentColor
-import org.example.anye.shared.R
 
 private const val TAG = "ProfileScreen1"
 
 @Composable
 fun ProfileScreen1 (navController: NavController, userId: Int?) {
-    var selectedTab by remember { mutableStateOf(EventTab.All) }
-    val displayedEvents = when (selectedTab) {
-        EventTab.All -> {
-            Log.d(TAG, "Displaying all events")
-            sampleEvents
-        }
-        EventTab.Favorites -> {
-            Log.d(TAG, "Displaying favorite events")
-            sampleEvents.take(2)
-        }
-        EventTab.Liked -> {
-            Log.d(TAG, "Displaying liked events")
-            sampleEvents.takeLast(2)
-        }
-    }
+//    var selectedTab by remember { mutableStateOf(EventTab.All) }
+//    val displayedEvents = when (selectedTab) {
+//        EventTab.All -> {
+//            Log.d(TAG, "Displaying all events")
+//            sampleEvents
+//        }
+//        EventTab.Favorites -> {
+//            Log.d(TAG, "Displaying favorite events")
+//            sampleEvents.take(2)
+//        }
+//        EventTab.Liked -> {
+//            Log.d(TAG, "Displaying liked events")
+//            sampleEvents.takeLast(2)
+//        }
+//    }
     var name by remember { mutableStateOf("") }
 
     val itemsPerRow = 3
@@ -153,7 +152,7 @@ fun ProfileScreen1 (navController: NavController, userId: Int?) {
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(id = user?.profilePicture ?: org.example.anye.R.drawable.default_avatar),
+                        painter = painterResource(id = org.example.anye.R.drawable.default_avatar),
                         contentDescription = "ProfilePicture",
                         modifier = Modifier
                             .size(100.dp)
@@ -192,28 +191,28 @@ fun ProfileScreen1 (navController: NavController, userId: Int?) {
                     }
                 )
 
-                TabRow(
-                    selectedTabIndex = selectedTab.ordinal,
-                    modifier = Modifier.fillMaxWidth(),
-                    containerColor = Color.Transparent
-                ) {
-                    EventTab.entries.forEach { tab ->
-                        Tab(
-                            selected = selectedTab == tab,
-                            onClick = {
-                                Log.d(TAG, "Tab changed to: ${tab.name}")
-                                selectedTab = tab
-                                      },
-                            icon = {
-                                Icon(
-                                    imageVector = tab.icon,
-                                    contentDescription = tab.label,
-                                    tint = if (selectedTab == tab) Color.White else Color.DarkGray
-                                )
-                            }
-                        )
-                    }
-                }
+//                TabRow(
+//                    selectedTabIndex = selectedTab.ordinal,
+//                    modifier = Modifier.fillMaxWidth(),
+//                    containerColor = Color.Transparent
+//                ) {
+//                    EventTab.entries.forEach { tab ->
+//                        Tab(
+//                            selected = selectedTab == tab,
+//                            onClick = {
+//                                Log.d(TAG, "Tab changed to: ${tab.name}")
+//                                selectedTab = tab
+//                                      },
+//                            icon = {
+//                                Icon(
+//                                    imageVector = tab.icon,
+//                                    contentDescription = tab.label,
+//                                    tint = if (selectedTab == tab) Color.White else Color.DarkGray
+//                                )
+//                            }
+//                        )
+//                    }
+//                }
                 //HorizontalDivider(
                 //  color = Color.LightGray,
                 //thickness = 5.dp,
@@ -228,18 +227,18 @@ fun ProfileScreen1 (navController: NavController, userId: Int?) {
                     verticalArrangement = Arrangement.spacedBy(8.dp)
 
                 ) {
-                    items(displayedEvents) { event ->
-                        EventCard(
-                            event = event,
-                            onClick = {
-                                Log.d(TAG, "Event clicked: ${event.title.take(15)}...")
-                            },
-                            isLarge = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(1f)
-                        )
-                    }
+//                    items(displayedEvents) { event ->
+//                        EventCard(
+//                            event = event,
+//                            onClick = {
+//                                Log.d(TAG, "Event clicked: ${event.title.take(15)}...")
+//                            },
+//                            isLarge = true,
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .aspectRatio(1f)
+//                        )
+//                    }
                 }
             }
             //MenuBar(navController)

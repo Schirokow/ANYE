@@ -51,15 +51,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import org.example.anye.data.AppModule
 import org.example.anye.data.Favorite
-import org.example.anye.presentation.viewmodels.FavoriteViewModel
+import org.example.anye.viewmodels.FavoriteViewModel
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
 import org.example.anye.ui.components.buttons.ClickButton
 import org.example.anye.ui.components.card.NewEventCard
 import org.example.anye.ui.menu.AnyeBottomBar
+import org.example.anye.viewmodels.HomeViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun FavoriteScreen(navController: NavController){
@@ -67,7 +68,8 @@ fun FavoriteScreen(navController: NavController){
     Log.d(TAG, "Favorite screen initialized")
 
     val context = LocalContext.current
-    val viewModel: FavoriteViewModel = viewModel(factory = AppModule.provideFavoriteViewModelFactory(context))
+
+    val viewModel: FavoriteViewModel = koinViewModel()
     val favoriteEvents by viewModel.favoriteEvents.collectAsState()
     var showDeleteAllDialog by remember { mutableStateOf(false) }
 

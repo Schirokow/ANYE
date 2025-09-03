@@ -1,11 +1,11 @@
-package org.example.anye.business.usecases
+package org.example.anye.usecases
 
 import kotlinx.coroutines.flow.Flow
 import org.example.anye.data.User
-import org.example.anye.data.UsersRepositoryImpl
+import org.example.anye.data.UsersRepository
 
-class GetUsersUseCase {
-    private val users = UsersRepositoryImpl()
+class GetUsersUseCase(private val users: UsersRepository) {
+//    private val users = UsersRepositoryImpl()
 
     fun getUsersFlow(): Flow<List<User>> {
         return users.getUsersFlow()

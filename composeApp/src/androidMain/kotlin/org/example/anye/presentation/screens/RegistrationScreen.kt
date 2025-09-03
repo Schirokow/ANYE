@@ -45,11 +45,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import org.example.anye.ui.components.buttons.ClickButton
 import org.example.anye.data.User
-import org.example.anye.presentation.viewmodels.LoginViewModel
+import org.example.anye.viewmodels.LoginViewModel
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
-import org.example.anye.shared.R
 
 private const val TAG = "RegistrationScreen"
 
