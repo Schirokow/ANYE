@@ -32,6 +32,12 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.navigation.compose)
 
+            // Koin
+            implementation(libs.koin.core)
+            implementation(libs.koin.android)
+            implementation(libs.koin.androidx.navigation)
+            implementation(libs.koin.androidx.compose)
+
             // Extended Icons
             implementation(libs.androidx.material.icons.extended)
 

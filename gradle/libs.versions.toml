@@ -15,7 +15,7 @@ playServicesLocation = "21.3.0"
 osmdroidAndroidVersion = "6.1.20"
 accompanistPermissionsVersion = "0.37.3"
 
-agp = "8.12.2"
+agp = "8.13.0"
 android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "35"
