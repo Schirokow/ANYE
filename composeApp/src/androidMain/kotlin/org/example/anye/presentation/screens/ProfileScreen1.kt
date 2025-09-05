@@ -58,6 +58,7 @@ import com.example.evoo.ui.theme.colorthemetype.BottomDarkBlue
 import com.example.evoo.ui.theme.colorthemetype.TopLightBlue
 import org.example.anye.viewmodels.Profile1ViewModel
 import org.example.anye.AccentColor
+import org.koin.androidx.compose.koinViewModel
 
 private const val TAG = "ProfileScreen1"
 
@@ -84,7 +85,7 @@ fun ProfileScreen1 (navController: NavController, userId: Int?) {
 
     Log.d(TAG, "Profile screen loaded for user: $userId")
 
-    val viewModel: Profile1ViewModel = viewModel()
+    val viewModel: Profile1ViewModel = koinViewModel()
     val userData by viewModel.users.collectAsState()
 
     // Finde den User in der Repository

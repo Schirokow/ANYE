@@ -23,18 +23,11 @@ actual fun platformModule() = module {
 
     single<FavoriteRepository> { FavoriteRepositoryImpl(get()) }
 
-    // Lokale Datenspeicher-Implementierung, die den Dao benötigt
-//    single<LocalStorageService.LocalPostsStorage> {
-//        LocalStorageService.PostsStorageImpl(get())
-//    }
 
     viewModel { Profile1ViewModel(getUsersUseCase = get()) }
     viewModel { FavoriteViewModel(favoriteRepository = get()) }
     viewModel { LoginViewModel(getUsersUseCase = get()) }
-    viewModel { HomeViewModel(
-        favoriteRepository = get(),
-        getEventsUseCase = get()
-    ) }
+    viewModel { HomeViewModel(favoriteRepository = get(), getEventsUseCase = get()) }
     viewModel {  ContentDetailViewModel(
         favoriteRepository = get(),
         eventsUseCase = get(),

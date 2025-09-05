@@ -49,6 +49,7 @@ import org.example.anye.viewmodels.LoginViewModel
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
+import org.koin.androidx.compose.koinViewModel
 
 private const val TAG = "RegistrationScreen"
 
@@ -102,7 +103,7 @@ fun RegistrationScreen(navController: NavController) {
                 )
             }
 
-            val viewModel: LoginViewModel = viewModel()
+            val viewModel: LoginViewModel = koinViewModel()
             val userData by viewModel.users.collectAsState()
 
             val userNameState = remember { mutableStateOf(TextFieldValue()) }

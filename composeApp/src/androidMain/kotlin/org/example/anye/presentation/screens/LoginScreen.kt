@@ -50,6 +50,7 @@ import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
 import org.example.anye.shared.R
+import org.koin.androidx.compose.koinViewModel
 
 private const val TAG = "LoginScreen"
 
@@ -102,7 +103,7 @@ fun LoginScreen(navController: NavController) {
                 )
             }
 
-            val viewModel: LoginViewModel = viewModel()
+            val viewModel: LoginViewModel = koinViewModel()
 
             val userData by viewModel.users.collectAsState()
 

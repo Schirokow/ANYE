@@ -61,7 +61,7 @@ fun ContentDetailScreen(navController: NavController, id: String){
 
     val context = LocalContext.current
 
-    val viewModel: ContentDetailViewModel = koinViewModel<ContentDetailViewModel>()
+    val viewModel: ContentDetailViewModel = koinViewModel()
 
     LaunchedEffect(id) {
         Log.d(TAG, "Loading festival for id: $id")
