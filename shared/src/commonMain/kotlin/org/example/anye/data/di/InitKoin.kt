@@ -1,11 +1,11 @@
 package org.example.anye.data.di
 
-import org.example.anye.data.EventByIdData
-import org.example.anye.data.EventByIdImplFlow
 import org.example.anye.data.EventsRepository
 import org.example.anye.data.EventsRepositoryImpl
+import org.example.anye.data.TicketmasterApiService
 import org.example.anye.data.UsersRepository
 import org.example.anye.data.UsersRepositoryImpl
+import org.example.anye.httpClient
 import org.example.anye.usecases.GetEventByIdUseCase
 import org.example.anye.usecases.GetEventsUseCase
 import org.example.anye.usecases.GetUsersUseCase
@@ -29,11 +29,16 @@ fun doInitKoin() = initKoin()
 // Definiert die gemeinsamen (common) Abhängigkeiten für alle Plattformen
 val commonModule = module {
 
-    single<EventByIdData> { EventByIdImplFlow() }
-    single { GetEventByIdUseCase(get()) }
+    // Ktor HttpClient
+    single { httpClient }
 
-    single<EventsRepository> { EventsRepositoryImpl() }
+    // Services
+    single { TicketmasterApiService(get()) }
+
+
+    single<EventsRepository> { EventsRepositoryImpl(get()) }
     single { GetEventsUseCase(get()) }
+    single { GetEventByIdUseCase(get()) }
 
     // Usecases sind plattformunabhängig und verwenden das Repository
     single<UsersRepository> { UsersRepositoryImpl() }
@@ -45,3 +50,4 @@ val commonModule = module {
 
 // Erwartete (expect) Funktion für plattformspezifische Module
 expect fun platformModule(): org.koin.core.module.Module
+

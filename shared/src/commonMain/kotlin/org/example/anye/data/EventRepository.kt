@@ -8,20 +8,26 @@ import org.example.anye.data.dao.FavoriteDao
 
 interface EventsRepository {
     fun getEventsDataFlow(city: String): Flow<List<TicketmasterEvent>>
+    fun getEventByIdFlow(eventId: String): Flow<TicketmasterEvent?>
     suspend fun getEventById(eventId: String): TicketmasterEvent?
 }
 
-class EventsRepositoryImpl() : EventsRepository {
+class EventsRepositoryImpl(private val api: TicketmasterApiService) : EventsRepository {
 
     override fun getEventsDataFlow(city: String): Flow<List<TicketmasterEvent>> {
         return flow {
-            emit(loadEvents(city = city))
+            emit(api.loadEvents(city = city))
+        }
+    }
+
+    override fun getEventByIdFlow(eventId: String): Flow<TicketmasterEvent?> {
+        return flow {
+            emit(api.getEventById(eventId))
         }
     }
 
     override suspend fun getEventById(eventId: String): TicketmasterEvent? {
-        // Rufe die Top-Level-Funktion `getEventById` direkt auf
-        return getEventById(eventId)
+        return api.getEventById(eventId)
     }
 }
 
