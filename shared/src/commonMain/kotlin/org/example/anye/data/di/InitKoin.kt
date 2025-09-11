@@ -23,13 +23,15 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) =
         )
     }
 
+// Diese Funktion ist nur ein "Eintrittspunkt" für Swift/ObjC
+fun doInitKoin() = initKoin()
+
 // Definiert die gemeinsamen (common) Abhängigkeiten für alle Plattformen
 val commonModule = module {
-    // Koin soll wissen, wie man EventByIdData bereitstellt
+
     single<EventByIdData> { EventByIdImplFlow() }
     single { GetEventByIdUseCase(get()) }
 
-    // Koin soll wissen, wie man EventsRepository bereitstellt
     single<EventsRepository> { EventsRepositoryImpl() }
     single { GetEventsUseCase(get()) }
 

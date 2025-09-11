@@ -135,13 +135,13 @@ suspend fun loadEvents(
                 parameter("apikey", API_KEY)
                 parameter("city", city) // Default-Stadt-Parameter hinzufügen
                 parameter("countryCode", countryCode) // Default-Länder-Code hinzufügen
-                println("suspend fun loadEvents in TicketmasterApiService used")
+                logMessage("suspend fun loadEvents in TicketmasterApiService used")
             }.body()
             // Hier extrahieren wir die Liste aus dem verschachtelten Objekt
             response._embedded?.events ?: emptyList()
         }
     } catch (e: Exception){
-        println("Fehler beim laden von Events: ${e.message}")
+        logMessage("Fehler beim laden von Events: ${e.message}")
         e.printStackTrace() // Wichtig, um den genauen Fehler im Logcat zu sehen
         emptyList()
     }

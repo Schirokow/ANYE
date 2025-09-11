@@ -13,8 +13,10 @@ interface EventsRepository {
 
 class EventsRepositoryImpl() : EventsRepository {
 
-    override fun getEventsDataFlow(city: String): Flow<List<TicketmasterEvent>> = flow {
-        emit(loadEvents(city = city))
+    override fun getEventsDataFlow(city: String): Flow<List<TicketmasterEvent>> {
+        return flow {
+            emit(loadEvents(city = city))
+        }
     }
 
     override suspend fun getEventById(eventId: String): TicketmasterEvent? {

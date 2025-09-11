@@ -77,9 +77,6 @@ fun HomeScreen(navController: NavController){
     val TAG = "HomeScreen"
     Log.d(TAG, "Home screen initialized")
 
-//    val viewModel: HomeViewModel = viewModel()
-
-    val context = LocalContext.current
     val viewModel: HomeViewModel = koinViewModel()
     var showDeleteDialog by remember { mutableStateOf(false) }
     val isLoading by viewModel.isLoading.collectAsState()
