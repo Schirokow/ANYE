@@ -208,7 +208,7 @@ fun EventContent(navController: NavController,viewModel: HomeViewModel) {
     LaunchedEffect(eventsDataList) {
         eventsDataList.forEach { event ->
             coroutineScope.launch {
-                val isFavorite = viewModel.favoriteRepository.isFavorite(event.id)
+                val isFavorite = viewModel.isFavorite(event.id)
                 favoriteStates[event.id] = isFavorite
             }
         }

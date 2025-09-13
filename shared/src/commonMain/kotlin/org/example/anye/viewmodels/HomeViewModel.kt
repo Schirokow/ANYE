@@ -11,9 +11,10 @@ import com.rickclephas.kmp.observableviewmodel.launch
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.example.anye.logMessage
+import org.example.anye.usecases.GetFavoriteUseCase
 
 class HomeViewModel(
-    val favoriteRepository: FavoriteRepository,
+    private val getFavoriteUseCase: GetFavoriteUseCase,
     private val getEventsUseCase: GetEventsUseCase
 ) : ViewModel() {
 
@@ -23,6 +24,10 @@ class HomeViewModel(
 
     private val _eventsData = MutableStateFlow<List<TicketmasterEvent>>(viewModelScope,emptyList())
     val eventsData: StateFlow<List<TicketmasterEvent>> = _eventsData.asStateFlow()
+
+    suspend fun isFavorite(eventId: String): Boolean {
+        return getFavoriteUseCase.isFavorite(eventId)
+    }
 
 
     fun loadAllEvents(city: String) {
@@ -50,11 +55,11 @@ class HomeViewModel(
     fun toggleFavorite(event: TicketmasterEvent) {
         viewModelScope.launch {
             try {
-                if (favoriteRepository.isFavorite(event.id)) {
-                    favoriteRepository.removeFavorite(event.id)
+                if (getFavoriteUseCase.isFavorite(event.id)) {
+                    getFavoriteUseCase.removeFavorite(event.id)
                     logMessage("HomeViewModel: Removed favorite: ${event.id}")
                 } else {
-                    favoriteRepository.addFavorite(event)
+                    getFavoriteUseCase.addFavorite(event)
                     logMessage("HomeViewModel: Added favorite: ${event.id}")
                 }
             } catch (e: Exception) {

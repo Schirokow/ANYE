@@ -57,8 +57,6 @@ fun ContentDetailScreen(navController: NavController, id: String){
     val TAG = "ContentDetailScreen"
     Log.d(TAG, "Screen initialized with id: $id")
 
-//    val viewModel: ContentDetailViewModel = viewModel()
-
     val context = LocalContext.current
 
     val viewModel: ContentDetailViewModel = koinViewModel()
@@ -68,7 +66,6 @@ fun ContentDetailScreen(navController: NavController, id: String){
         viewModel.loadEvent(id)
     }
 
-//    val festival by viewModel.festival.collectAsState()
     val event by viewModel.event.collectAsState()
     val isFavorite by viewModel.isFavorite.collectAsState()
     if (event == null) {

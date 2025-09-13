@@ -13,9 +13,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import org.example.anye.logMessage
+import org.example.anye.usecases.GetFavoriteUseCase
 
 class ContentDetailViewModel(
-    private val favoriteRepository: FavoriteRepository,
+    private val getFavoriteUseCase: GetFavoriteUseCase,
     private val eventsUseCase: GetEventsUseCase,
     private val getEventByIdUseCase: GetEventByIdUseCase
 ) : ViewModel() {
@@ -45,12 +46,12 @@ class ContentDetailViewModel(
     fun toggleFavorite(event: TicketmasterEvent) {
         viewModelScope.launch {
             try {
-                if (favoriteRepository.isFavorite(event.id)) {
-                    favoriteRepository.removeFavorite(event.id)
+                if (getFavoriteUseCase.isFavorite(event.id)) {
+                    getFavoriteUseCase.removeFavorite(event.id)
                     _isFavorite.value = false
                     logMessage("ContentDetailViewModel: Removed favorite: ${event.id}")
                 } else {
-                    favoriteRepository.addFavorite(event)
+                    getFavoriteUseCase.addFavorite(event)
                     _isFavorite.value = true
                     logMessage("ContentDetailViewModel: Added favorite: ${event.id}")
                 }

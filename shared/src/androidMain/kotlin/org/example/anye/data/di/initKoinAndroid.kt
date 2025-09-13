@@ -25,11 +25,11 @@ actual fun platformModule() = module {
 
 
     viewModel { Profile1ViewModel(getUsersUseCase = get()) }
-    viewModel { FavoriteViewModel(favoriteRepository = get()) }
+    viewModel { FavoriteViewModel(getFavoriteUseCase = get()) }
     viewModel { LoginViewModel(getUsersUseCase = get()) }
-    viewModel { HomeViewModel(favoriteRepository = get(), getEventsUseCase = get()) }
+    viewModel { HomeViewModel(getFavoriteUseCase = get(), getEventsUseCase = get()) }
     viewModel {  ContentDetailViewModel(
-        favoriteRepository = get(),
+        getFavoriteUseCase = get(),
         eventsUseCase = get(),
         getEventByIdUseCase = get()
     ) }
