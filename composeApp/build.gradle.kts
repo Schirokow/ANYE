@@ -12,7 +12,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
     kotlin("plugin.serialization") version "2.2.10"
-    id("com.rickclephas.kmp.nativecoroutines") version "1.0.0-ALPHA-46"
+    id("com.rickclephas.kmp.nativecoroutines") version "1.0.0-ALPHA-47"
 
 
 }
