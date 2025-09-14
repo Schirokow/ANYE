@@ -28,6 +28,20 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) =
 
 // Diese Funktion ist nur ein "Eintrittspunkt" für Swift/ObjC
 fun doInitKoin() = initKoin()
+/*
+@main
+struct iOSApp: App{
+  init(){
+  initKoinKT.doInitKoin()
+  }
+
+  var body: some Scene{
+    WindowGroup{
+      ContentView()
+    }
+  }
+}
+ */
 
 // Definiert die gemeinsamen (common) Abhängigkeiten für alle Plattformen
 val commonModule = module {

@@ -162,7 +162,7 @@ fun HomeScreen(navController: NavController){
                 }
                 else -> {
                     // Funktion für die Vorschau.
-                    EventContent(navController, viewModel)
+                    EventContent(navController)
                 }
             }
 
@@ -198,9 +198,10 @@ fun HomeScreen(navController: NavController){
 
 
 @Composable
-fun EventContent(navController: NavController,viewModel: HomeViewModel) {
+fun EventContent(navController: NavController) {
 
     val TAG = "EventContent"
+    val viewModel: HomeViewModel = koinViewModel()
     val eventsDataList by viewModel.eventsData.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val favoriteStates = remember { mutableStateMapOf<String, Boolean>() }

@@ -138,7 +138,7 @@ class TicketmasterApiService(private val client: HttpClient){
                     parameter("countryCode", countryCode) // Default-Länder-Code hinzufügen
                     logMessage("suspend fun loadEvents in TicketmasterApiService used")
                 }.body()
-                // Hier extrahieren wir die Liste aus dem verschachtelten Objekt
+                // Hier wird die Liste aus dem verschachtelten Objekt extrahiert
                 response._embedded?.events ?: emptyList()
             }
         } catch (e: Exception){

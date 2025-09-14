@@ -23,7 +23,7 @@ actual fun platformModule() = module {
 
     single<FavoriteRepository> { FavoriteRepositoryImpl(get()) }
 
-
+    // ViewModels Registrieren:
     viewModel { Profile1ViewModel(getUsersUseCase = get()) }
     viewModel { FavoriteViewModel(getFavoriteUseCase = get()) }
     viewModel { LoginViewModel(getUsersUseCase = get()) }

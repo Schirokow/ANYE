@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.flow
 interface EventsRepository {
     fun getEventsDataFlow(city: String): Flow<List<TicketmasterEvent>>
     fun getEventByIdFlow(eventId: String): Flow<TicketmasterEvent?>
-    suspend fun getEventById(eventId: String): TicketmasterEvent?
+
 }
 
 class EventsRepositoryImpl(private val api: TicketmasterApiService) : EventsRepository {
@@ -23,9 +23,6 @@ class EventsRepositoryImpl(private val api: TicketmasterApiService) : EventsRepo
         }
     }
 
-    override suspend fun getEventById(eventId: String): TicketmasterEvent? {
-        return api.getEventById(eventId)
-    }
 }
 
 
