@@ -1,10 +1,13 @@
 package org.example.anye
 
-import io.ktor.client.*
+import android.util.Log
+import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 actual val httpClient: HttpClient = HttpClient(OkHttp) {
@@ -24,4 +27,8 @@ actual val httpClient: HttpClient = HttpClient(OkHttp) {
         level = LogLevel.ALL
     }
 
+}
+
+actual fun logMessage(message: String) {
+    Log.d("HttpService", message)
 }
