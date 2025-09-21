@@ -1,0 +1,10 @@
+package org.example.anye.data
+
+import androidx.room.Database
+import androidx.room.RoomDatabase
+import org.example.anye.data.dao.FavoriteDao
+
+@Database(entities = [Favorite::class], version = 1, exportSchema = false)
+abstract class FavoriteDatabase : RoomDatabase() {
+    abstract fun favoriteDao(): FavoriteDao
+}

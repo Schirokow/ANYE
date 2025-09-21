@@ -12,7 +12,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
     kotlin("plugin.serialization") version "2.2.10"
-    id("com.rickclephas.kmp.nativecoroutines") version "1.0.0-ALPHA-46"
+    id("com.rickclephas.kmp.nativecoroutines") version "1.0.0-ALPHA-47"
 
 
 }
@@ -31,6 +31,12 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.navigation.compose)
+
+            // Koin
+            implementation(libs.koin.core)
+            implementation(libs.koin.android)
+            implementation(libs.koin.androidx.navigation)
+            implementation(libs.koin.androidx.compose)
 
             // Extended Icons
             implementation(libs.androidx.material.icons.extended)
