@@ -13,6 +13,7 @@ plugins {
     alias(libs.plugins.room)
     kotlin("plugin.serialization") version "2.2.10"
     id("com.rickclephas.kmp.nativecoroutines") version "1.0.0-ALPHA-47"
+    id("com.google.gms.google-services")
 
 
 }
@@ -37,6 +38,13 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.koin.androidx.navigation)
             implementation(libs.koin.androidx.compose)
+
+            // Firebase
+            implementation(project.dependencies.platform("com.google.firebase:firebase-bom:34.3.0"))
+            implementation("com.google.firebase:firebase-analytics")
+            implementation ("com.google.firebase:firebase-firestore")
+            implementation ("com.google.firebase:firebase-storage")
+            implementation("com.google.firebase:firebase-auth")
 
             // Extended Icons
             implementation(libs.androidx.material.icons.extended)

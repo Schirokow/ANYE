@@ -13,6 +13,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import org.example.anye.presentation.screens.ContentDetailScreen
 import org.example.anye.presentation.screens.HomeScreen
 import org.example.anye.presentation.screens.LocationScreen
@@ -34,6 +36,9 @@ class MainActivity : ComponentActivity() {
             Navigation()
 
         }
+        // Firebase Test
+//        val fs = Firebase.firestore
+//        fs.collection("users").document().set(mapOf("name" to "Testname"))
     }
 }
 

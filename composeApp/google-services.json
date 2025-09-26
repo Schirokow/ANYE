@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:428856261803:android:5fae51d1a24a4de7724bee",
+        "mobilesdk_app_id": "1:428856261803:android:566cdd832832c005724bee",
         "android_client_info": {
-          "package_name": "org.example.anye.shared"
+          "package_name": "org.example.anye"
         }
       },
       "oauth_client": [],
