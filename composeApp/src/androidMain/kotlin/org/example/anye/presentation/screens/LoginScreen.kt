@@ -43,6 +43,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 import org.example.anye.ui.components.buttons.ClickButton
 import org.example.anye.ui.menu.AnyeBottomBar
 import org.example.anye.viewmodels.LoginViewModel
@@ -56,6 +59,11 @@ private const val TAG = "LoginScreen"
 
 @Composable
 fun LoginScreen(navController: NavController) {
+
+    val auth = Firebase.auth
+    val currentUser = auth.currentUser?.email
+    Log.d(" Authentication", "User email: ${auth.currentUser?.email}")
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -109,8 +117,8 @@ fun LoginScreen(navController: NavController) {
 
 
             // State-Management mit Jetpack Compose
-            val emailState = remember { mutableStateOf(TextFieldValue()) }
-            val passwordState = remember { mutableStateOf(TextFieldValue()) }
+            var emailState by remember { mutableStateOf("") }
+            var passwordState by remember { mutableStateOf("") }
 
             var loginError by remember { mutableStateOf(false) }
             if (loginError) {
@@ -173,10 +181,11 @@ fun LoginScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(60.dp))
 
                 TextField(
-                    value = emailState.value,
-                    onValueChange = { newText -> emailState.value = newText },
-                    label = { Text("E-Mail oder Benutzername") },
-                    placeholder = { Text("E-Mail/Benutzername") },
+                    value = emailState,
+                    onValueChange = {
+                        emailState = it
+                    },
+                    placeholder = { Text("E-Mail") },
                     singleLine = true,
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
@@ -184,9 +193,10 @@ fun LoginScreen(navController: NavController) {
                         .fillMaxWidth()
                 )
                 TextField(
-                    value = passwordState.value,
-                    onValueChange = { newText -> passwordState.value = newText },
-                    label = { Text("Passwort") },
+                    value = passwordState,
+                    onValueChange = {
+                        passwordState = it
+                    },
                     placeholder = { Text("Passwort") },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
@@ -209,39 +219,22 @@ fun LoginScreen(navController: NavController) {
                 ClickButton(
                     text = "Anmelden",
                     onClick = {
-                        val email = emailState.value.text
-                        val password = passwordState.value.text
+                        signIn(auth, emailState, passwordState)
+                        Log.d(" Authentication", "User email: ${auth.currentUser?.email}")
 
-                        Log.d(TAG, "Login attempt started.")
+                    },
+                    modifier = Modifier
+                        .padding(horizontal = 120.dp)
+                        .fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(5.dp))
 
-                        val user = userData.find{
-                            (it.email == email || it.name == email) && it.password == password
-                        }
+                ClickButton(
+                    text = "Abmelden",
+                    onClick = {
+                        signOut(auth)
+                        Log.d(" Authentication", "User email: ${auth.currentUser?.email}")
 
-                        if (user != null) {
-                            Log.i(TAG, "Login successful for user: ${user.name}")
-                            loginError = false
-                            // Eingabefelder leeren
-                            emailState.value = TextFieldValue("")
-                            passwordState.value = TextFieldValue("")
-
-//                            AuthManager.login(user).also {
-//                                Log.d(TAG, "AuthManager login state updated")
-//                            } // Benutzer setzen, Globaler Login
-
-                            Log.d(TAG, "Navigating to profile: ${user.name}")
-                            navController.navigate("ProfileScreen1/${user.id}") {
-                                //Löscht den gesamten Back-Stack
-                                popUpTo(navController.graph.startDestinationId) {
-                                    inclusive = true
-                                }
-                                //Verhindert Mehrfachinstanzen
-                                launchSingleTop = true
-                            }
-                    } else{
-                            Log.w(TAG, "Login failed for email: ${email.take(3)}... (invalid credentials)")
-                            loginError = true // Zeigt Fehlerdialog
-                    }
                     },
                     modifier = Modifier
                         .padding(horizontal = 120.dp)
@@ -255,6 +248,22 @@ fun LoginScreen(navController: NavController) {
         }
 
     }
+}
+
+
+private fun signIn(auth: FirebaseAuth, email: String, password: String){
+    auth.signInWithEmailAndPassword(email,password)
+        .addOnCompleteListener {
+            if (it.isSuccessful){
+                Log.d("MyLog", "Sign In successful")
+            }else{
+                Log.d("MyLog", "Sign In failure")
+            }
+        }
+}
+
+private fun signOut(auth: FirebaseAuth){
+    auth.signOut()
 }
 
 //Anmeldeflow:
