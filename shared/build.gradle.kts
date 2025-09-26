@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -8,6 +9,7 @@ plugins {
     alias(libs.plugins.room)
     id("com.rickclephas.kmp.nativecoroutines") version "1.0.0-ALPHA-47"
     kotlin("plugin.serialization") version "2.2.10"
+    id("com.google.gms.google-services") version "4.4.3" apply false
 }
 
 kotlin {
@@ -51,6 +53,14 @@ kotlin {
             // Room
             implementation(libs.room.runtime)
             implementation(libs.sqlite.bundled)
+
+            // Firebase
+            implementation(project.dependencies.platform("com.google.firebase:firebase-bom:34.3.0"))
+            implementation("com.google.firebase:firebase-analytics")
+            implementation ("com.google.firebase:firebase-firestore")
+            implementation ("com.google.firebase:firebase-storage")
+            implementation("com.google.firebase:firebase-auth")
+
         }
 
         androidMain.dependencies {

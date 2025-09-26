@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "428856261803",
+    "project_id": "anye-e28b1",
+    "storage_bucket": "anye-e28b1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:428856261803:android:5fae51d1a24a4de7724bee",
+        "android_client_info": {
+          "package_name": "org.example.anye.shared"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMTF5APH4covbEqmxFPKOoOgeftBNhcEk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
