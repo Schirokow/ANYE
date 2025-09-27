@@ -4,6 +4,8 @@ import org.example.anye.data.FavoriteDatabase
 import org.example.anye.data.FavoriteRepository
 import org.example.anye.data.FavoriteRepositoryImpl
 import org.example.anye.data.GetAndroidFavoriteDatabase
+import org.example.anye.data.LoginService
+import org.example.anye.data.LoginServiceAndroid
 import org.example.anye.data.dao.FavoriteDao
 import org.example.anye.viewmodels.ContentDetailViewModel
 import org.example.anye.viewmodels.FavoriteViewModel
@@ -23,10 +25,12 @@ actual fun platformModule() = module {
 
     single<FavoriteRepository> { FavoriteRepositoryImpl(get()) }
 
+    single<LoginService> { LoginServiceAndroid() }
+
     // ViewModels Registrieren:
     viewModel { Profile1ViewModel(getUsersUseCase = get()) }
     viewModel { FavoriteViewModel(getFavoriteUseCase = get()) }
-    viewModel { LoginViewModel(getUsersUseCase = get()) }
+    viewModel { LoginViewModel(getUsersUseCase = get(), getLoginServiceUseCase = get()) }
     viewModel { HomeViewModel(getFavoriteUseCase = get(), getEventsUseCase = get()) }
     viewModel {  ContentDetailViewModel(
         getFavoriteUseCase = get(),

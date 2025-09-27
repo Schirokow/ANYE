@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import org.example.anye.presentation.screens.ContentDetailScreen
@@ -50,11 +51,16 @@ fun Navigation() {
     val TAG = "AppNavigation"
     val navController = rememberNavController()
 
+    fun getCurrentUser(): FirebaseUser? {
+        return Firebase.auth.currentUser
+    }
+
     // Aktuellen User holen
-    val currentUser = Firebase.auth.currentUser
+//    val currentUser = Firebase.auth.currentUser
+    val currentUser = getCurrentUser()
 
     // Dynamische Startseite abhängig vom User
-    val startDestination = if (currentUser == null) {
+    val startDestination = if (getCurrentUser() == null) {
         "LoginScreen"
     } else {
         "LocationScreen"

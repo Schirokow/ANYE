@@ -219,7 +219,8 @@ fun LoginScreen(navController: NavController) {
                 ClickButton(
                     text = "Anmelden",
                     onClick = {
-                        signIn(auth, emailState, passwordState)
+//                        signIn(auth, emailState, passwordState)
+                        viewModel.signIn(emailState,passwordState)
                         Log.d(" Authentication", "User email: ${auth.currentUser?.email}")
 
                     },

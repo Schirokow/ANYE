@@ -15,7 +15,7 @@ import org.example.anye.usecases.GetFavoriteUseCase
 
 class HomeViewModel(
     private val getFavoriteUseCase: GetFavoriteUseCase,
-    private val getEventsUseCase: GetEventsUseCase
+    private val getEventsUseCase: GetEventsUseCase,
 ) : ViewModel() {
 
 

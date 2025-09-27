@@ -62,6 +62,13 @@ kotlin {
             implementation(libs.koin.androidx.navigation)
             implementation(libs.koin.androidx.compose)
 
+            // Firebase
+            implementation(project.dependencies.platform("com.google.firebase:firebase-bom:34.3.0"))
+            implementation("com.google.firebase:firebase-analytics")
+            implementation ("com.google.firebase:firebase-firestore")
+            implementation ("com.google.firebase:firebase-storage")
+            implementation("com.google.firebase:firebase-auth")
+
         }
 
         iosMain.dependencies {
