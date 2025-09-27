@@ -242,7 +242,6 @@ fun ProfileScreen1 (navController: NavController, userId: Int?) {
 //                    }
                 }
             }
-            //MenuBar(navController)
             AnyeBottomBar(navController)
         }
 

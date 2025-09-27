@@ -13,6 +13,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
 import org.example.anye.presentation.screens.ContentDetailScreen
 import org.example.anye.presentation.screens.HomeScreen
 import org.example.anye.presentation.screens.LocationScreen
@@ -21,6 +25,8 @@ import org.example.anye.presentation.screens.ProfileScreen1
 import org.example.anye.presentation.screens.RegistrationScreen
 import org.example.anye.presentation.screens.FavoriteScreen
 import org.example.anye.presentation.screens.SettingScreen
+import org.example.anye.viewmodels.LoginViewModel
+import org.koin.androidx.compose.koinViewModel
 
 private const val TAG = "MainActivity"
 
@@ -42,12 +48,23 @@ class MainActivity : ComponentActivity() {
 fun Navigation() {
 
     val TAG = "AppNavigation"
+    val viewModel: LoginViewModel = koinViewModel()
     val navController = rememberNavController()
+
+    // Aktuellen User holen
+//    val currentUser = Firebase.auth.currentUser
+
+    // Dynamische Startseite abhängig vom User
+    val startDestination = if (viewModel.getCurrentUser() == null) {
+        "LoginScreen"
+    } else {
+        "LocationScreen"
+    }
 
     NavHost(
         navController = navController,
-//        startDestination = startDestination //Dynamische Startseite
-        startDestination = "LocationScreen"
+        startDestination = startDestination //Dynamische Startseite
+//        startDestination = "LocationScreen"
     ) {
         composable("HomeScreen") {
             Log.d(TAG, "Navigating to HomeScreen")

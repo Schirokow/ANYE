@@ -43,6 +43,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.firebase.Firebase
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 import org.example.anye.ui.components.buttons.ClickButton
 import org.example.anye.data.User
 import org.example.anye.viewmodels.LoginViewModel
@@ -55,6 +59,8 @@ private const val TAG = "RegistrationScreen"
 
 @Composable
 fun RegistrationScreen(navController: NavController) {
+
+    val auth = Firebase.auth
 
     Box(
         modifier = Modifier
@@ -107,9 +113,9 @@ fun RegistrationScreen(navController: NavController) {
             val userData by viewModel.users.collectAsState()
 
             val userNameState = remember { mutableStateOf(TextFieldValue()) }
-            val emailState = remember { mutableStateOf(TextFieldValue()) }
-            val passwordState = remember { mutableStateOf(TextFieldValue()) }
-            val repeatPasswordState = remember { mutableStateOf(TextFieldValue()) }
+            var emailState by remember { mutableStateOf("") }
+            var passwordState by remember { mutableStateOf("") }
+            var repeatPasswordState by remember { mutableStateOf("") }
 
             var registrationError by remember { mutableStateOf<RegistrationError?>(null) }
 
@@ -172,8 +178,10 @@ fun RegistrationScreen(navController: NavController) {
                 )
 
                 TextField(
-                    value = emailState.value,
-                    onValueChange = { newText -> emailState.value = newText },
+                    value = emailState,
+                    onValueChange = {
+                        emailState = it
+                    },
 //                    label = { Text("E-Mail") },
                     placeholder = { Text("E-Mail") },
                     singleLine = true,
@@ -183,8 +191,10 @@ fun RegistrationScreen(navController: NavController) {
                         .fillMaxWidth()
                 )
                 TextField(
-                    value = passwordState.value,
-                    onValueChange = { newText -> passwordState.value = newText },
+                    value = passwordState,
+                    onValueChange = {
+                        passwordState = it
+                    },
 //                    label = { Text("Passwort") },
                     placeholder = { Text("Passwort") },
                     visualTransformation = PasswordVisualTransformation(),
@@ -195,8 +205,8 @@ fun RegistrationScreen(navController: NavController) {
                         .fillMaxWidth()
                 )
                 TextField(
-                    value = repeatPasswordState.value,
-                    onValueChange = { repeatPasswordState.value = it },
+                    value = repeatPasswordState,
+                    onValueChange = { repeatPasswordState = it },
 //                    label = { Text("Passwort wiederholen") },
                     placeholder = { Text("Passwort wiederholen") },
                     visualTransformation = PasswordVisualTransformation(),
@@ -216,36 +226,35 @@ fun RegistrationScreen(navController: NavController) {
                         .fillMaxWidth(),
                     onClick = {
                         Log.d(TAG, "Attempting registration...")
-                        val user = User(
-                            id = 0,
-                            name = userNameState.value.text,
-                            email = emailState.value.text,
-                            password = passwordState.value.text
-                        )
+//                        signUp(auth, emailState, passwordState)
+                        viewModel.signUp(emailState,passwordState)
+                        emailState = ""
+                        passwordState = ""
+                        repeatPasswordState = ""
 
                         when {
                             // Validierungen
 
-                            userNameState.value.text.isBlank() ->
-                                registrationError = RegistrationError.EMPTY_USERNAME
-                            emailState.value.text.isBlank() ->
+//                            userNameState.value.text.isBlank() ->
+//                                registrationError = RegistrationError.EMPTY_USERNAME
+                            emailState.isBlank() ->
                                 registrationError = RegistrationError.EMPTY_EMAIL
-                            passwordState.value.text.isBlank() ->
+                            passwordState.isBlank() ->
                                 registrationError = RegistrationError.EMPTY_PASSWORD
-                            passwordState.value.text != repeatPasswordState.value.text ->
+                            passwordState != repeatPasswordState ->
                                 registrationError = RegistrationError.PASSWORD_MISMATCH
-                            userData.any { it.email == user.email } ->
-                                registrationError = RegistrationError.EMAIL_EXISTS
-                            userData.any { it.name == user.name } ->
-                                registrationError = RegistrationError.USERNAME_EXISTS
-                            !isValidEmail(user.email) ->
-                                registrationError = RegistrationError.INVALID_EMAIL
+//                            userData.any { it.email == user.email } ->
+//                                registrationError = RegistrationError.EMAIL_EXISTS
+//                            userData.any { it.name == user.name } ->
+//                                registrationError = RegistrationError.USERNAME_EXISTS
+//                            !isValidEmail(user.email) ->
+//                                registrationError = RegistrationError.INVALID_EMAIL
                             else -> {
                                 // Registrierung erfolgreich
-                                Log.i(TAG, "Registration successful for user Id: ${user.id}")
-                               viewModel.addUser(user) // Fügt Benutzer hinzu
+                                Log.i(TAG, "Registration successful for user Id:")
+//                               viewModel.addUser(user) // Fügt Benutzer hinzu
 //                                AuthManager.login(user) // Automatischer Login
-                                navController.navigate("ProfileScreen1/${user.id}") {
+                                navController.navigate("ProfileScreen1/$") {
                                     popUpTo(navController.graph.startDestinationId) {
                                         inclusive = true
                                     }
@@ -257,10 +266,12 @@ fun RegistrationScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 ClickButton(
-                    text = "Abbrechen",
+                    text = "Account löschen",
                     onClick = {
-                        Log.d(TAG, "Registration cancelled, navigating to login")
-                        navController.navigate("LoginScreen")
+                        viewModel.deleteAccount(emailState,passwordState)
+//                        deleteAccount(auth,emailState,passwordState)
+                        Log.d(TAG, "Account gelöscht")
+//                        navController.navigate("LoginScreen")
                               },
                     modifier = Modifier
                         .padding(horizontal = 120.dp)
@@ -275,7 +286,33 @@ fun RegistrationScreen(navController: NavController) {
 }
 
 
+private fun signUp(auth: FirebaseAuth, email: String, password: String){
+    auth.createUserWithEmailAndPassword(email,password)
+        .addOnCompleteListener {
+            if (it.isSuccessful){
+                Log.d("MyLog", "Sign Up successful")
+            }else{
+                Log.d("MyLog", "Sign Up failure")
+            }
+        }
+}
 
+private fun deleteAccount(auth: FirebaseAuth, email: String, password: String){
+    val credential = EmailAuthProvider.getCredential(email,password)
+    auth.currentUser?.reauthenticate(credential)?.addOnCompleteListener {
+        if (it.isSuccessful){
+            auth.currentUser?.delete()?.addOnCompleteListener {
+                if (it.isSuccessful){
+                    Log.d("MyLog", "Account was deleted")
+                }else{
+                    Log.d("MyLog", "Failure delete account")
+                }
+            }
+        }else{
+            Log.d("MyLog", "Failure reauthenticate")
+        }
+    }
+}
 
 
 
