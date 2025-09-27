@@ -1,14 +1,17 @@
 package org.example.anye.data
 
 import android.util.Log
+import com.google.firebase.Firebase
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.auth
 
 class LoginServiceAndroid : LoginService {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    override val currentUser: AuthUser?
-        get() = auth.currentUser?.let { AuthUser(it.uid, it.email) }
+//    override val currentUser: AuthUser?
+//        get() = auth.currentUser?.let { AuthUser(it.uid, it.email) }
 
     override fun signUp(email: String, password: String, onResult: (Boolean) -> Unit) {
         auth.createUserWithEmailAndPassword(email, password)
@@ -61,6 +64,11 @@ class LoginServiceAndroid : LoginService {
     override fun signOut() {
         auth.signOut()
         Log.d("MyLog", "Signed out")
+    }
+
+    override fun getCurrentUser(): AuthUser? {
+        val user = auth.currentUser
+        return user?.let { AuthUser(it.uid, it.email) }
     }
 }
 

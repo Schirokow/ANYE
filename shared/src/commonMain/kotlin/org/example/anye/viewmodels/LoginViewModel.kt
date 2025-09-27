@@ -6,6 +6,7 @@ import com.rickclephas.kmp.observableviewmodel.launch
 import com.rickclephas.kmp.observableviewmodel.launch
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.example.anye.data.AuthUser
 import org.example.anye.data.User
 import org.example.anye.logMessage
 import org.example.anye.usecases.GetLoginServiceUseCase
@@ -36,6 +37,10 @@ class LoginViewModel(
 
     fun signIn(email: String, password: String){
         getLoginServiceUseCase.signIn(email,password)
+    }
+
+    fun getCurrentUser(): AuthUser?{
+        return getLoginServiceUseCase.getCurrentUser()
     }
 
 }

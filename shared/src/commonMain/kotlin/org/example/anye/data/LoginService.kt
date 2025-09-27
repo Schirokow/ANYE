@@ -9,5 +9,6 @@ interface LoginService {
     fun signIn(email: String, password: String, onResult: (Boolean) -> Unit)
     fun deleteAccount(email: String, password: String, onResult: (Boolean) -> Unit)
     fun signOut()
-    val currentUser: AuthUser?
+    fun getCurrentUser(): AuthUser?
+//    val currentUser: AuthUser?
 }

@@ -25,6 +25,8 @@ import org.example.anye.presentation.screens.ProfileScreen1
 import org.example.anye.presentation.screens.RegistrationScreen
 import org.example.anye.presentation.screens.FavoriteScreen
 import org.example.anye.presentation.screens.SettingScreen
+import org.example.anye.viewmodels.LoginViewModel
+import org.koin.androidx.compose.koinViewModel
 
 private const val TAG = "MainActivity"
 
@@ -38,9 +40,6 @@ class MainActivity : ComponentActivity() {
             Navigation()
 
         }
-        // Firebase Test
-//        val fs = Firebase.firestore
-//        fs.collection("users").document().set(mapOf("name" to "Testname"))
     }
 }
 
@@ -49,18 +48,14 @@ class MainActivity : ComponentActivity() {
 fun Navigation() {
 
     val TAG = "AppNavigation"
+    val viewModel: LoginViewModel = koinViewModel()
     val navController = rememberNavController()
-
-    fun getCurrentUser(): FirebaseUser? {
-        return Firebase.auth.currentUser
-    }
 
     // Aktuellen User holen
 //    val currentUser = Firebase.auth.currentUser
-    val currentUser = getCurrentUser()
 
     // Dynamische Startseite abhängig vom User
-    val startDestination = if (getCurrentUser() == null) {
+    val startDestination = if (viewModel.getCurrentUser() == null) {
         "LoginScreen"
     } else {
         "LocationScreen"
