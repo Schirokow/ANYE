@@ -35,8 +35,20 @@ class LoginViewModel(
         getUsersUseCase.addUser(user)
     }
 
+    fun signUp(email: String, password: String){
+        getLoginServiceUseCase.signUp(email,password)
+    }
+
     fun signIn(email: String, password: String){
         getLoginServiceUseCase.signIn(email,password)
+    }
+
+    fun signOut(){
+        getLoginServiceUseCase.signOut()
+    }
+
+    fun deleteAccount(email: String, password: String){
+        getLoginServiceUseCase.deleteAccount(email,password)
     }
 
     fun getCurrentUser(): AuthUser?{

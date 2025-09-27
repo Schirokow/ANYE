@@ -5,6 +5,17 @@ import org.example.anye.data.LoginService
 
 class GetLoginServiceUseCase(private val auth: LoginService) {
 
+    fun signUp(email: String, password: String) {
+        auth.signUp(email, password){ success ->
+            if (success) {
+                println("Registration success")
+            } else {
+                println("Registration failed")
+            }
+        }
+
+    }
+
     fun signIn(email: String, password: String) {
         auth.signIn(email, password) { success ->
             if (success) {
@@ -13,6 +24,22 @@ class GetLoginServiceUseCase(private val auth: LoginService) {
                 println("Sign in failed")
             }
         }
+    }
+
+    fun signOut(){
+        auth.signOut()
+    }
+
+    fun deleteAccount(email: String, password: String) {
+        auth.deleteAccount(email,password){ success ->
+            if (success) {
+                println("Account deleted")
+            } else {
+                println("Delete Account failed")
+            }
+
+        }
+
     }
 
     fun getCurrentUser(): AuthUser?{

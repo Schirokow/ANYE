@@ -233,7 +233,8 @@ fun LoginScreen(navController: NavController) {
                 ClickButton(
                     text = "Abmelden",
                     onClick = {
-                        signOut(auth)
+//                        signOut(auth)
+                        viewModel.signOut()
                         Log.d(" Authentication", "User email: ${auth.currentUser?.email}")
 
                     },

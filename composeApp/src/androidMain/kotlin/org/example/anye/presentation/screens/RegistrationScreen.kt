@@ -226,7 +226,8 @@ fun RegistrationScreen(navController: NavController) {
                         .fillMaxWidth(),
                     onClick = {
                         Log.d(TAG, "Attempting registration...")
-                        signUp(auth, emailState, passwordState)
+//                        signUp(auth, emailState, passwordState)
+                        viewModel.signUp(emailState,passwordState)
                         emailState = ""
                         passwordState = ""
                         repeatPasswordState = ""
@@ -265,10 +266,12 @@ fun RegistrationScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 ClickButton(
-                    text = "Abbrechen",
+                    text = "Account löschen",
                     onClick = {
-                        Log.d(TAG, "Registration cancelled, navigating to login")
-                        navController.navigate("LoginScreen")
+                        viewModel.deleteAccount(emailState,passwordState)
+//                        deleteAccount(auth,emailState,passwordState)
+                        Log.d(TAG, "Account gelöscht")
+//                        navController.navigate("LoginScreen")
                               },
                     modifier = Modifier
                         .padding(horizontal = 120.dp)
@@ -294,17 +297,6 @@ private fun signUp(auth: FirebaseAuth, email: String, password: String){
         }
 }
 
-private fun signIn(auth: FirebaseAuth, email: String, password: String){
-    auth.signInWithEmailAndPassword(email,password)
-        .addOnCompleteListener {
-            if (it.isSuccessful){
-                Log.d("MyLog", "Sign In successful")
-            }else{
-                Log.d("MyLog", "Sign In failure")
-            }
-        }
-}
-
 private fun deleteAccount(auth: FirebaseAuth, email: String, password: String){
     val credential = EmailAuthProvider.getCredential(email,password)
     auth.currentUser?.reauthenticate(credential)?.addOnCompleteListener {
@@ -321,12 +313,6 @@ private fun deleteAccount(auth: FirebaseAuth, email: String, password: String){
         }
     }
 }
-
-
-private fun signOut(auth: FirebaseAuth){
-    auth.signOut()
-}
-
 
 
 
