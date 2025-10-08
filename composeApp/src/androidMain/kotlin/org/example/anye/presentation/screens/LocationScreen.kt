@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -51,15 +54,19 @@ import org.osmdroid.views.overlay.Marker
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun LocationScreen(navController: NavController) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AccentColor)
-    ) {
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Scaffold als Hauptcontainer verwenden
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        containerColor = AccentColor,
+    ) { paddingValues -> // paddingValues berücksichtigt die Systemleisten
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(WindowInsets.systemBars.asPaddingValues())
+                .padding(paddingValues)
                 .background(BackgroundColor)
         ) {
             Box(
@@ -69,7 +76,6 @@ fun LocationScreen(navController: NavController) {
 
                 OpenStreetMapWithLiveLocation()
             }
-            //MenuBar(navController)
             AnyeBottomBar(navController)
         }
     }
@@ -143,7 +149,7 @@ fun OpenStreetMapWithLiveLocation() {
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF29719E),  // EVOO Blauton Hintergrundfarbe
                     contentColor = Color.White      // Text-/Symbolfarbe
-            )
+                )
             ) {
                 Text("+")
             }
