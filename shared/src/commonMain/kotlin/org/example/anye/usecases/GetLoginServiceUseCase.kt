@@ -16,14 +16,14 @@ class GetLoginServiceUseCase(private val auth: LoginService) {
 
     }
 
-    fun signIn(email: String, password: String) {
-        auth.signIn(email, password) { success ->
-            if (success) {
-                println("User signed in")
-            } else {
-                println("Sign in failed")
-            }
-        }
+    fun signIn(email: String, password: String,onResult: (Boolean) -> Unit) {
+        auth.signIn(email, password,onResult) //{ success ->
+//            if (success) {
+//                println("User signed in")
+//            } else {
+//                println("Sign in failed")
+//            }
+//        }
     }
 
     fun signOut(){
