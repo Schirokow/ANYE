@@ -56,6 +56,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import kotlinx.coroutines.launch
 import org.example.anye.ui.components.buttons.ClickButton
 import org.example.anye.data.User
 import org.example.anye.viewmodels.LoginViewModel
@@ -82,24 +83,6 @@ fun RegistrationScreen(navController: NavController) {
     var passwordState by remember { mutableStateOf("") }
     var repeatPasswordState by remember { mutableStateOf("") }
 
-    var registrationError by remember { mutableStateOf<RegistrationError?>(null) }
-
-    if (registrationError != null) {
-        Log.w(TAG, "Registration error: ${registrationError?.name} - ${registrationError?.message}")
-        AlertDialog(
-            onDismissRequest = { registrationError = null },
-            title = { Text("Registrierungsfehler") },
-            text = { Text(registrationError!!.message) },
-            confirmButton = {
-                Button(onClick = {
-                    Log.d(TAG, "Dismissed error dialog: ${registrationError?.name}")
-                    registrationError = null
-                }) {
-                    Text("OK")
-                }
-            }
-        )
-    }
 
     // Auf Events vom ViewModel hören
     LaunchedEffect(Unit) {
@@ -126,8 +109,10 @@ fun RegistrationScreen(navController: NavController) {
             SnackbarHost(hostState = snackbarHostState) { data ->
                 // Hole Farbe aus den SnackbarData-Extras
                 val background = when (data.visuals.message) {
-                    in listOf("Anmeldung erfolgreich!", "Erfolgreich abgemeldet") -> Color(0xFF4CAF50) // Grün
-                    "E-Mail oder Passwort ist falsch" -> Color(0xFFF44336) // Rot
+                    in listOf("Registrierung erfolgreich!", "Account erfolgreich gelöscht") -> Color(
+                        0xFF4CAF50
+                    ) // Grün
+                    in listOf("Fehler bei der Registrierung", "Passwörter stimmen nicht überein") -> Color(0xFFF44336) // Rot
                     else -> Color(0xFF2196F3) // Blau (Standard)
                 }
                 androidx.compose.material3.Snackbar(
@@ -163,10 +148,10 @@ fun RegistrationScreen(navController: NavController) {
                     )
                 )
         ) {
-            Row (
+            Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
-            ){
+            ) {
                 Icon(
                     imageVector = Icons.Rounded.ArrowBack,
                     contentDescription = "ArrowBack",
@@ -185,7 +170,7 @@ fun RegistrationScreen(navController: NavController) {
                     fontSize = 20.sp,
                     color = Color.White,
                     modifier = Modifier
-                        .clickable{
+                        .clickable {
                             Log.d(TAG, "Navigating to LoginScreen")
                             navController.navigate("LoginScreen")
                         }
@@ -301,40 +286,22 @@ fun RegistrationScreen(navController: NavController) {
                     onClick = {
                         Log.d(TAG, "Attempting registration...")
 //                        signUp(auth, emailState, passwordState)
-                        viewModel.signUp(emailState,passwordState)
-                        emailState = ""
-                        passwordState = ""
-                        repeatPasswordState = ""
-
-                        when {
-                            // Validierungen
-
-//                            userNameState.value.text.isBlank() ->
-//                                registrationError = RegistrationError.EMPTY_USERNAME
-                            emailState.isBlank() ->
-                                registrationError = RegistrationError.EMPTY_EMAIL
-                            passwordState.isBlank() ->
-                                registrationError = RegistrationError.EMPTY_PASSWORD
-                            passwordState != repeatPasswordState ->
-                                registrationError = RegistrationError.PASSWORD_MISMATCH
-//                            userData.any { it.email == user.email } ->
-//                                registrationError = RegistrationError.EMAIL_EXISTS
-//                            userData.any { it.name == user.name } ->
-//                                registrationError = RegistrationError.USERNAME_EXISTS
-//                            !isValidEmail(user.email) ->
-//                                registrationError = RegistrationError.INVALID_EMAIL
-                            else -> {
-                                // Registrierung erfolgreich
-                                Log.i(TAG, "Registration successful for user Id:")
-//                               viewModel.addUser(user) // Fügt Benutzer hinzu
-//                                AuthManager.login(user) // Automatischer Login
-                                navController.navigate("ProfileScreen1/$") {
-                                    popUpTo(navController.graph.startDestinationId) {
-                                        inclusive = true
-                                    }
-                                }
+                        if (emailState.isNotBlank() && passwordState.isNotBlank() && repeatPasswordState.isNotBlank() && passwordState == repeatPasswordState) {
+                            viewModel.signUp(emailState, passwordState)
+                            emailState = ""
+                            passwordState = ""
+                            repeatPasswordState = ""
+                        }else if(passwordState != repeatPasswordState) {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Passwörter stimmen nicht überein")
+                            }
+                        }else
+                         {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Bitte alle Felder ausfühlen!")
                             }
                         }
+
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -342,11 +309,11 @@ fun RegistrationScreen(navController: NavController) {
                 ClickButton(
                     text = "Account löschen",
                     onClick = {
-                        viewModel.deleteAccount(emailState,passwordState)
+                        viewModel.deleteAccount(emailState, passwordState)
 //                        deleteAccount(auth,emailState,passwordState)
                         Log.d(TAG, "Account gelöscht")
 //                        navController.navigate("LoginScreen")
-                              },
+                    },
                     modifier = Modifier
                         .padding(horizontal = 120.dp)
                         .fillMaxWidth()
@@ -360,51 +327,31 @@ fun RegistrationScreen(navController: NavController) {
 }
 
 
-private fun signUp(auth: FirebaseAuth, email: String, password: String){
-    auth.createUserWithEmailAndPassword(email,password)
+private fun signUp(auth: FirebaseAuth, email: String, password: String) {
+    auth.createUserWithEmailAndPassword(email, password)
         .addOnCompleteListener {
-            if (it.isSuccessful){
+            if (it.isSuccessful) {
                 Log.d("MyLog", "Sign Up successful")
-            }else{
+            } else {
                 Log.d("MyLog", "Sign Up failure")
             }
         }
 }
 
-private fun deleteAccount(auth: FirebaseAuth, email: String, password: String){
-    val credential = EmailAuthProvider.getCredential(email,password)
+private fun deleteAccount(auth: FirebaseAuth, email: String, password: String) {
+    val credential = EmailAuthProvider.getCredential(email, password)
     auth.currentUser?.reauthenticate(credential)?.addOnCompleteListener {
-        if (it.isSuccessful){
+        if (it.isSuccessful) {
             auth.currentUser?.delete()?.addOnCompleteListener {
-                if (it.isSuccessful){
+                if (it.isSuccessful) {
                     Log.d("MyLog", "Account was deleted")
-                }else{
+                } else {
                     Log.d("MyLog", "Failure delete account")
                 }
             }
-        }else{
+        } else {
             Log.d("MyLog", "Failure reauthenticate")
         }
     }
 }
 
-
-
-
-// Hilfsfunktion für E-Mail-Validierung mit Regex
-private fun isValidEmail(email: String): Boolean {
-    return Patterns.EMAIL_ADDRESS.matcher(email).matches() //vordefinierte Regex-Muster Patterns.EMAIL_ADDRESS
-}
-////Die Funktion isValidEmail verwendet ein Regex-Muster, um das Format der E-Mail zu prüfen.
-////Nur wenn das Muster passt, wird die Registrierung fortgesetzt.
-//
-//// Fehlertypen
-enum class RegistrationError(val message: String) {
-    EMPTY_USERNAME("Bitte Benutzernamen eingeben"),
-    EMPTY_EMAIL("Bitte E-Mail-Adresse eingeben"),
-    EMPTY_PASSWORD("Bitte Passwort eingeben"),
-    PASSWORD_MISMATCH("Passwörter stimmen nicht überein"),
-    EMAIL_EXISTS("E-Mail-Adresse bereits registriert"),
-    USERNAME_EXISTS("Benutzername bereits vergeben"),
-    INVALID_EMAIL("Ungültiges E-Mail-Format")
-}

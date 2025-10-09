@@ -43,7 +43,17 @@ class LoginViewModel(
     }
 
     fun signUp(email: String, password: String) {
-        getLoginServiceUseCase.signUp(email, password)
+        getLoginServiceUseCase.signUp(email, password) { isSuccess ->
+            viewModelScope.launch {
+                if (isSuccess) {
+                    _authResult.emit(AuthResult.Success("Registrierung erfolgreich!"))
+                } else {
+                    _authResult.emit(AuthResult.Error("Fehler bei der Registrierung"))
+                }
+            }
+        }
+
+
     }
 
     //    fun signIn(email: String, password: String){
@@ -75,7 +85,7 @@ class LoginViewModel(
 //    }
 
     fun deleteAccount(email: String, password: String) {
-        getLoginServiceUseCase.deleteAccount(email, password)
+        getLoginServiceUseCase.deleteAccount(email, password){}
     }
 
     fun getCurrentUser(): AuthUser? {
