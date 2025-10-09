@@ -7,21 +7,43 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 
-class LoginServiceAndroid : LoginService {
+class LoginServiceAndroid(
+    private val firestoreService: FirestoreService = FirestoreServiceAndroid()
+) : LoginService {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
 //    override val currentUser: AuthUser?
 //        get() = auth.currentUser?.let { AuthUser(it.uid, it.email) }
 
-    override fun signUp(email: String, password: String, onResult: (Boolean) -> Unit) {
+    override fun signUp(
+        email: String,
+        password: String,
+        username: String,
+        onResult: (Boolean) -> Unit
+    ) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Log.d("MyLog", "Sign Up successful")
-                    onResult(true)
-                } else {
-                    Log.d("MyLog", "Sign Up failure: ${task.exception?.message}")
-                    onResult(false)
+                    val user = auth.currentUser
+                    if (user != null) {
+                        val newUser = User(
+                            id = user.uid,
+                            username = username,
+                            email = email
+                        )
+
+                        firestoreService.addUser(newUser) { firestoreSuccess ->
+                            if (firestoreSuccess) {
+                                Log.d("Auth", "User $username registered and saved in Firestore")
+                            } else {
+                                Log.e("Auth", "Firestore save failed")
+                            }
+                        }
+                        onResult(true)
+                    } else {
+                        Log.d("Auth", "Sign Up failure: ${task.exception?.message}")
+                        onResult(false)
+                    }
                 }
             }
     }

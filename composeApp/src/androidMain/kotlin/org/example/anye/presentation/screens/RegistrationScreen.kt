@@ -58,7 +58,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 import org.example.anye.ui.components.buttons.ClickButton
-import org.example.anye.data.User
 import org.example.anye.viewmodels.LoginViewModel
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
@@ -73,12 +72,12 @@ fun RegistrationScreen(navController: NavController) {
 
     val auth = Firebase.auth
     val viewModel: LoginViewModel = koinViewModel()
-    val userData by viewModel.users.collectAsState()
+
     // Zustand für den Snackbar erstellen
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    val userNameState = remember { mutableStateOf(TextFieldValue()) }
+    var userNameState by remember { mutableStateOf("") }
     var emailState by remember { mutableStateOf("") }
     var passwordState by remember { mutableStateOf("") }
     var repeatPasswordState by remember { mutableStateOf("") }
@@ -109,10 +108,16 @@ fun RegistrationScreen(navController: NavController) {
             SnackbarHost(hostState = snackbarHostState) { data ->
                 // Hole Farbe aus den SnackbarData-Extras
                 val background = when (data.visuals.message) {
-                    in listOf("Registrierung erfolgreich!", "Account erfolgreich gelöscht") -> Color(
+                    in listOf(
+                        "Registrierung erfolgreich!",
+                        "Account erfolgreich gelöscht"
+                    ) -> Color(
                         0xFF4CAF50
                     ) // Grün
-                    in listOf("Fehler bei der Registrierung", "Passwörter stimmen nicht überein") -> Color(0xFFF44336) // Rot
+                    in listOf(
+                        "Fehler bei der Registrierung",
+                        "Passwörter stimmen nicht überein"
+                    ) -> Color(0xFFF44336) // Rot
                     else -> Color(0xFF2196F3) // Blau (Standard)
                 }
                 androidx.compose.material3.Snackbar(
@@ -205,8 +210,8 @@ fun RegistrationScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(30.dp))
 
                 OutlinedTextField(
-                    value = userNameState.value,
-                    onValueChange = { newText -> userNameState.value = newText },
+                    value = userNameState,
+                    onValueChange = { userNameState = it },
 //                    label = { Text("Benutzername") },
                     placeholder = { Text("Benutzername", color = Color.White) },
                     singleLine = true,
@@ -286,17 +291,17 @@ fun RegistrationScreen(navController: NavController) {
                     onClick = {
                         Log.d(TAG, "Attempting registration...")
 //                        signUp(auth, emailState, passwordState)
-                        if (emailState.isNotBlank() && passwordState.isNotBlank() && repeatPasswordState.isNotBlank() && passwordState == repeatPasswordState) {
-                            viewModel.signUp(emailState, passwordState)
+                        if (emailState.isNotBlank() && passwordState.isNotBlank() && userNameState.isNotBlank() && repeatPasswordState.isNotBlank() && passwordState == repeatPasswordState) {
+                            viewModel.signUp(emailState, passwordState, userNameState)
+                            userNameState = ""
                             emailState = ""
                             passwordState = ""
                             repeatPasswordState = ""
-                        }else if(passwordState != repeatPasswordState) {
+                        } else if (passwordState != repeatPasswordState) {
                             scope.launch {
                                 snackbarHostState.showSnackbar("Passwörter stimmen nicht überein")
                             }
-                        }else
-                         {
+                        } else {
                             scope.launch {
                                 snackbarHostState.showSnackbar("Bitte alle Felder ausfühlen!")
                             }

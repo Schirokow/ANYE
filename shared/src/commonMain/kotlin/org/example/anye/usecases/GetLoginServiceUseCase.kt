@@ -5,8 +5,8 @@ import org.example.anye.data.LoginService
 
 class GetLoginServiceUseCase(private val auth: LoginService) {
 
-    fun signUp(email: String, password: String, onResult: (Boolean) -> Unit) {
-        auth.signUp(email, password, onResult) //{ success ->
+    fun signUpWithUsername(email: String, password: String, username: String, onResult: (Boolean) -> Unit) {
+        auth.signUp(email, password, username, onResult) //{ success ->
 //            if (success) {
 //                println("Registration success")
 //            } else {

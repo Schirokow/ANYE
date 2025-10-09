@@ -86,10 +86,8 @@ fun ProfileScreen1 (navController: NavController, userId: Int?) {
     Log.d(TAG, "Profile screen loaded for user: $userId")
 
     val viewModel: Profile1ViewModel = koinViewModel()
-    val userData by viewModel.users.collectAsState()
 
-    // Finde den User in der Repository
-    val user = userData.find { it.id == userId }
+
 
     Box(
         modifier = Modifier
@@ -133,7 +131,7 @@ fun ProfileScreen1 (navController: NavController, userId: Int?) {
                 // NameFeld
 
                 Text(
-                    text = "Willkommen ${user?.name}",
+                    text = "Willkommen $",
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     color = Color.White

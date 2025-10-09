@@ -79,7 +79,6 @@ fun LoginScreen(navController: NavController) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    val userData by viewModel.users.collectAsState()
 
 
     // State-Management mit Jetpack Compose

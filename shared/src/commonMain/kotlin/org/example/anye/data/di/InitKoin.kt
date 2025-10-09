@@ -4,15 +4,15 @@ import org.example.anye.data.EventsRepository
 import org.example.anye.data.EventsRepositoryImpl
 import org.example.anye.data.FavoriteRepository
 import org.example.anye.data.FavoriteRepositoryImpl
+import org.example.anye.data.FirestoreService
 import org.example.anye.data.TicketmasterApiService
-import org.example.anye.data.UsersRepository
-import org.example.anye.data.UsersRepositoryImpl
+
 import org.example.anye.httpClient
 import org.example.anye.usecases.GetEventByIdUseCase
 import org.example.anye.usecases.GetEventsUseCase
 import org.example.anye.usecases.GetFavoriteUseCase
 import org.example.anye.usecases.GetLoginServiceUseCase
-import org.example.anye.usecases.GetUsersUseCase
+
 import org.koin.core.context.startKoin
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
@@ -61,8 +61,6 @@ val commonModule = module {
     single <FavoriteRepository>{ FavoriteRepositoryImpl(get()) }
     single { GetFavoriteUseCase(get()) }
 
-    single<UsersRepository> { UsersRepositoryImpl() }
-    single { GetUsersUseCase(get()) }
 
     single { GetLoginServiceUseCase(get()) }
 
