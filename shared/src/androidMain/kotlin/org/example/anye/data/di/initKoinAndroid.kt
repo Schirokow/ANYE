@@ -3,10 +3,13 @@ package org.example.anye.data.di
 import org.example.anye.data.FavoriteDatabase
 import org.example.anye.data.FavoriteRepository
 import org.example.anye.data.FavoriteRepositoryImpl
+import org.example.anye.data.FirestoreService
+import org.example.anye.data.FirestoreServiceAndroid
 import org.example.anye.data.GetAndroidFavoriteDatabase
 import org.example.anye.data.LoginService
 import org.example.anye.data.LoginServiceAndroid
 import org.example.anye.data.dao.FavoriteDao
+import org.example.anye.usecases.GetLoginServiceUseCase
 import org.example.anye.viewmodels.ContentDetailViewModel
 import org.example.anye.viewmodels.FavoriteViewModel
 import org.example.anye.viewmodels.HomeViewModel
@@ -25,12 +28,13 @@ actual fun platformModule() = module {
 
     single<FavoriteRepository> { FavoriteRepositoryImpl(get()) }
 
-    single<LoginService> { LoginServiceAndroid() }
+    single<LoginService> { LoginServiceAndroid(get()) }
+    single<FirestoreService> { FirestoreServiceAndroid() }
 
     // ViewModels Registrieren:
-    viewModel { Profile1ViewModel(getUsersUseCase = get()) }
+    viewModel { Profile1ViewModel() }
     viewModel { FavoriteViewModel(getFavoriteUseCase = get()) }
-    viewModel { LoginViewModel(getUsersUseCase = get(), getLoginServiceUseCase = get()) }
+    viewModel { LoginViewModel(getLoginServiceUseCase = get()) }
     viewModel { HomeViewModel(getFavoriteUseCase = get(), getEventsUseCase = get()) }
     viewModel {  ContentDetailViewModel(
         getFavoriteUseCase = get(),
