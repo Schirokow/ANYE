@@ -57,7 +57,7 @@ class LoginViewModel(
                 if (isSuccess) {
                     _authResult.emit(AuthResult.Success("Anmeldung erfolgreich!"))
                 } else {
-                    _authResult.emit(AuthResult.Error("E-Mail oder Passwort ist falsch."))
+                    _authResult.emit(AuthResult.Error("E-Mail oder Passwort ist falsch"))
                 }
             }
         }
@@ -66,7 +66,7 @@ class LoginViewModel(
     fun signOut() {
         getLoginServiceUseCase.signOut()
         viewModelScope.launch {
-            _authResult.emit(AuthResult.Success("Erfolgreich abgemeldet."))
+            _authResult.emit(AuthResult.Success("Erfolgreich abgemeldet"))
         }
     }
 

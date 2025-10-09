@@ -104,7 +104,32 @@ fun LoginScreen(navController: NavController) {
 
     // Scaffold als Hauptcontainer verwenden
     Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                // Hole Farbe aus den SnackbarData-Extras
+                val background = when (data.visuals.message) {
+                    in listOf("Anmeldung erfolgreich!", "Erfolgreich abgemeldet") -> Color(0xFF4CAF50) // Grün
+                    "E-Mail oder Passwort ist falsch" -> Color(0xFFF44336) // Rot
+                    else -> Color(0xFF2196F3) // Blau (Standard)
+                }
+                androidx.compose.material3.Snackbar(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    containerColor = background,
+                    contentColor = Color.White,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = data.visuals.message,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+        },
         containerColor = AccentColor,
     ) { paddingValues -> // paddingValues berücksichtigt die Systemleisten
         Box(
