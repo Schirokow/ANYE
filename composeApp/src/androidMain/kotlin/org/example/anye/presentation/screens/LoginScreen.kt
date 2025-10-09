@@ -22,6 +22,8 @@ import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -40,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
@@ -202,26 +205,36 @@ fun LoginScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(60.dp))
 
-                TextField(
+                OutlinedTextField(
                     value = emailState,
                     onValueChange = {
                         emailState = it
                     },
-                    placeholder = { Text("E-Mail") },
+                    placeholder = { Text("E-Mail", color = Color.White) },
                     singleLine = true,
+                    textStyle = TextStyle(color = Color.White),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Yellow,
+                        unfocusedBorderColor = Color.White
+                    ),
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
                         .padding(top = 16.dp)
                         .fillMaxWidth()
                 )
-                TextField(
+                OutlinedTextField(
                     value = passwordState,
                     onValueChange = {
                         passwordState = it
                     },
-                    placeholder = { Text("Passwort") },
+                    placeholder = { Text("Passwort", color = Color.White) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
+                    textStyle = TextStyle(color = Color.White),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Yellow,
+                        unfocusedBorderColor = Color.White
+                    ),
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
                         .padding(top = 16.dp)

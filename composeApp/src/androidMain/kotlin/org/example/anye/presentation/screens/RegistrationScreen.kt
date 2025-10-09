@@ -23,22 +23,31 @@ import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -53,6 +62,7 @@ import org.example.anye.viewmodels.LoginViewModel
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
+import org.example.anye.viewmodels.AuthResult
 import org.koin.androidx.compose.koinViewModel
 
 private const val TAG = "RegistrationScreen"
@@ -61,16 +71,89 @@ private const val TAG = "RegistrationScreen"
 fun RegistrationScreen(navController: NavController) {
 
     val auth = Firebase.auth
+    val viewModel: LoginViewModel = koinViewModel()
+    val userData by viewModel.users.collectAsState()
+    // Zustand für den Snackbar erstellen
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AccentColor)
-    ) {
+    val userNameState = remember { mutableStateOf(TextFieldValue()) }
+    var emailState by remember { mutableStateOf("") }
+    var passwordState by remember { mutableStateOf("") }
+    var repeatPasswordState by remember { mutableStateOf("") }
+
+    var registrationError by remember { mutableStateOf<RegistrationError?>(null) }
+
+    if (registrationError != null) {
+        Log.w(TAG, "Registration error: ${registrationError?.name} - ${registrationError?.message}")
+        AlertDialog(
+            onDismissRequest = { registrationError = null },
+            title = { Text("Registrierungsfehler") },
+            text = { Text(registrationError!!.message) },
+            confirmButton = {
+                Button(onClick = {
+                    Log.d(TAG, "Dismissed error dialog: ${registrationError?.name}")
+                    registrationError = null
+                }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    // Auf Events vom ViewModel hören
+    LaunchedEffect(Unit) {
+        viewModel.authResult.collect { result ->
+            when (result) {
+                is AuthResult.Success -> {
+                    snackbarHostState.showSnackbar(message = result.message)
+                }
+
+                is AuthResult.Error -> {
+                    snackbarHostState.showSnackbar(message = result.message)
+                }
+
+                is AuthResult.Initial -> {
+                    // Nichts tun beim Start
+                }
+            }
+        }
+    }
+
+    // Scaffold als Hauptcontainer verwenden
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                // Hole Farbe aus den SnackbarData-Extras
+                val background = when (data.visuals.message) {
+                    in listOf("Anmeldung erfolgreich!", "Erfolgreich abgemeldet") -> Color(0xFF4CAF50) // Grün
+                    "E-Mail oder Passwort ist falsch" -> Color(0xFFF44336) // Rot
+                    else -> Color(0xFF2196F3) // Blau (Standard)
+                }
+                androidx.compose.material3.Snackbar(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    containerColor = background,
+                    contentColor = Color.White,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = data.visuals.message,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+        },
+        containerColor = AccentColor,
+    ) { paddingValues -> // paddingValues berücksichtigt die Systemleisten
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(WindowInsets.systemBars.asPaddingValues()) // Eine Function um den Content unter der Status Bar anzuzeigen.
+                .padding(paddingValues) // Eine Function um den Content unter der Status Bar anzuzeigen.
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
@@ -109,35 +192,6 @@ fun RegistrationScreen(navController: NavController) {
                 )
             }
 
-            val viewModel: LoginViewModel = koinViewModel()
-            val userData by viewModel.users.collectAsState()
-
-            val userNameState = remember { mutableStateOf(TextFieldValue()) }
-            var emailState by remember { mutableStateOf("") }
-            var passwordState by remember { mutableStateOf("") }
-            var repeatPasswordState by remember { mutableStateOf("") }
-
-            var registrationError by remember { mutableStateOf<RegistrationError?>(null) }
-
-            if (registrationError != null) {
-                Log.w(TAG, "Registration error: ${registrationError?.name} - ${registrationError?.message}")
-                AlertDialog(
-                    onDismissRequest = { registrationError = null },
-                    title = { Text("Registrierungsfehler") },
-                    text = { Text(registrationError!!.message) },
-                    confirmButton = {
-                        Button(onClick = {
-                            Log.d(TAG, "Dismissed error dialog: ${registrationError?.name}")
-                            registrationError = null
-                        }) {
-                            Text("OK")
-                        }
-                    }
-                )
-            }
-
-
-
             Column(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -165,52 +219,72 @@ fun RegistrationScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                TextField(
+                OutlinedTextField(
                     value = userNameState.value,
                     onValueChange = { newText -> userNameState.value = newText },
 //                    label = { Text("Benutzername") },
-                    placeholder = { Text("Benutzername") },
+                    placeholder = { Text("Benutzername", color = Color.White) },
                     singleLine = true,
+                    textStyle = TextStyle(color = Color.White),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Yellow,
+                        unfocusedBorderColor = Color.White
+                    ),
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
                         .padding(top = 16.dp)
                         .fillMaxWidth()
                 )
 
-                TextField(
+                OutlinedTextField(
                     value = emailState,
                     onValueChange = {
                         emailState = it
                     },
 //                    label = { Text("E-Mail") },
-                    placeholder = { Text("E-Mail") },
+                    placeholder = { Text("E-Mail", color = Color.White) },
                     singleLine = true,
+                    textStyle = TextStyle(color = Color.White),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Yellow,
+                        unfocusedBorderColor = Color.White
+                    ),
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
                         .padding(top = 16.dp)
                         .fillMaxWidth()
                 )
-                TextField(
+                OutlinedTextField(
                     value = passwordState,
                     onValueChange = {
                         passwordState = it
                     },
 //                    label = { Text("Passwort") },
-                    placeholder = { Text("Passwort") },
+                    placeholder = { Text("Passwort", color = Color.White) },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
+                    textStyle = TextStyle(color = Color.White),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Yellow,
+                        unfocusedBorderColor = Color.White
+                    ),
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
                         .padding(top = 16.dp)
                         .fillMaxWidth()
                 )
-                TextField(
+                OutlinedTextField(
                     value = repeatPasswordState,
                     onValueChange = { repeatPasswordState = it },
 //                    label = { Text("Passwort wiederholen") },
-                    placeholder = { Text("Passwort wiederholen") },
+                    placeholder = { Text("Passwort wiederholen", color = Color.White) },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
+                    textStyle = TextStyle(color = Color.White),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Yellow,
+                        unfocusedBorderColor = Color.White
+                    ),
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
                         .padding(top = 16.dp)
@@ -334,15 +408,3 @@ enum class RegistrationError(val message: String) {
     USERNAME_EXISTS("Benutzername bereits vergeben"),
     INVALID_EMAIL("Ungültiges E-Mail-Format")
 }
-
-//Registrierungsflow:
-//
-//Prüfung aller Eingabefelder
-//Eindeutigkeitsprüfung von Email/Benutzername
-//Passwortmatch-Check
-//E-Mail-Formatvalidierung mit Android-internem Pattern
-//
-//Bei Erfolg:
-//Benutzer wird Repository hinzugefügt
-//Automatische Anmeldung
-//Persistenz durch saveUsers()
