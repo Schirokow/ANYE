@@ -82,6 +82,9 @@ fun RegistrationScreen(navController: NavController) {
     var passwordState by remember { mutableStateOf("") }
     var repeatPasswordState by remember { mutableStateOf("") }
 
+    // 🔥 Zustand für den Bestätigungsdialog
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
 
     // Auf Events vom ViewModel hören
     LaunchedEffect(Unit) {
@@ -314,49 +317,71 @@ fun RegistrationScreen(navController: NavController) {
                 ClickButton(
                     text = "Account löschen",
                     onClick = {
-                        viewModel.deleteAccount(emailState, passwordState)
-//                        deleteAccount(auth,emailState,passwordState)
-                        Log.d(TAG, "Account gelöscht")
+                        showDeleteDialog = true
+//                        viewModel.deleteAccount(emailState, passwordState)
+////                        deleteAccount(auth,emailState,passwordState)
+//                        Log.d(TAG, "Account gelöscht")
 //                        navController.navigate("LoginScreen")
                     },
                     modifier = Modifier
                         .padding(horizontal = 120.dp)
                         .fillMaxWidth()
                 )
-            }
-            //MenuBar(navController)
-        }
 
-    }
-
-}
-
-
-private fun signUp(auth: FirebaseAuth, email: String, password: String) {
-    auth.createUserWithEmailAndPassword(email, password)
-        .addOnCompleteListener {
-            if (it.isSuccessful) {
-                Log.d("MyLog", "Sign Up successful")
-            } else {
-                Log.d("MyLog", "Sign Up failure")
-            }
-        }
-}
-
-private fun deleteAccount(auth: FirebaseAuth, email: String, password: String) {
-    val credential = EmailAuthProvider.getCredential(email, password)
-    auth.currentUser?.reauthenticate(credential)?.addOnCompleteListener {
-        if (it.isSuccessful) {
-            auth.currentUser?.delete()?.addOnCompleteListener {
-                if (it.isSuccessful) {
-                    Log.d("MyLog", "Account was deleted")
-                } else {
-                    Log.d("MyLog", "Failure delete account")
+                // AlerDer Bestätigungsdialog
+                if (showDeleteDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showDeleteDialog = false },
+                        title = {
+                            Text(
+                                "Account löschen?",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        text = {
+                            Text(
+                                "Bist du sicher, dass du deinen Account unwiderruflich löschen möchtest? Deine Daten werden dauerhaft entfernt.",
+                                color = Color.White
+                            )
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    showDeleteDialog = false
+                                    viewModel.deleteAccount(emailState, passwordState)
+                                    userNameState = ""
+                                    emailState = ""
+                                    passwordState = ""
+                                    repeatPasswordState = ""
+                                }
+                            ) {
+                                Text("Ja, löschen", color = Color.White)
+                            }
+                        },
+                        dismissButton = {
+                            Button(
+                                onClick = { showDeleteDialog = false },
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                    containerColor = Color.Gray
+                                )
+                            ) {
+                                Text("Abbrechen", color = Color.White)
+                            }
+                        },
+                        containerColor = Color(0xFF1E1E1E),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                    )
                 }
             }
-        } else {
-            Log.d("MyLog", "Failure reauthenticate")
         }
+
+
     }
+    //MenuBar(navController)
 }
+
+
+
+
 
