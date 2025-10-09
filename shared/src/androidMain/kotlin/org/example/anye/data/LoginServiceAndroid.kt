@@ -62,22 +62,37 @@ class LoginServiceAndroid(
     }
 
     override fun deleteAccount(email: String, password: String, onResult: (Boolean) -> Unit) {
+        val user = auth.currentUser ?: return onResult(false)
+        val userId = user.uid
         val credential = EmailAuthProvider.getCredential(email, password)
-        auth.currentUser?.reauthenticate(credential)
-            ?.addOnCompleteListener { reauthTask ->
+
+        user.reauthenticate(credential)
+            .addOnCompleteListener { reauthTask ->
                 if (reauthTask.isSuccessful) {
-                    auth.currentUser?.delete()
-                        ?.addOnCompleteListener { deleteTask ->
+                    user.delete()
+                        .addOnCompleteListener { deleteTask ->
                             if (deleteTask.isSuccessful) {
-                                Log.d("MyLog", "Account was deleted")
-                                onResult(true)
+                                Log.d("MyLog", "Firebase Auth account deleted")
+
+                                // Firestore-Dokument löschen:
+                                firestoreService.deleteUser(userId) { firestoreDeleted ->
+                                    if (firestoreDeleted) {
+                                        Log.d("Firestore", "User data deleted successfully")
+                                    } else {
+                                        Log.e("Firestore", "Failed to delete user data")
+                                    }
+                                    onResult(firestoreDeleted)
+                                }
                             } else {
-                                Log.d("MyLog", "Failure delete account")
+                                Log.e(
+                                    "MyLog",
+                                    "Error deleting Firebase account: ${deleteTask.exception?.message}"
+                                )
                                 onResult(false)
                             }
                         }
                 } else {
-                    Log.d("MyLog", "Failure reauthenticate")
+                    Log.d("MyLog", "Reauthentication failed: ${reauthTask.exception?.message}")
                     onResult(false)
                 }
             }

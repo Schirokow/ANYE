@@ -54,7 +54,15 @@ class LoginViewModel(
     }
 
     fun deleteAccount(email: String, password: String) {
-        getLoginServiceUseCase.deleteAccount(email, password) {}
+        getLoginServiceUseCase.deleteAccount(email, password) { isSuccess ->
+            viewModelScope.launch {
+                if (isSuccess) {
+                    _authResult.emit(AuthResult.Success("Account erfolgreich gelöscht"))
+                } else {
+                    _authResult.emit(AuthResult.Error("Fehler beim Löschen des Accounts"))
+                }
+            }
+        }
     }
 
     fun getCurrentUser(): AuthUser? {

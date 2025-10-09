@@ -19,4 +19,18 @@ class FirestoreServiceAndroid : FirestoreService {
                 onResult(false)
             }
     }
+
+    override fun deleteUser(userId: String, onResult: (Boolean) -> Unit) {
+        firestore.collection("users")
+            .document(userId)
+            .delete()
+            .addOnSuccessListener {
+                Log.d("Firestore", "User document deleted: $userId")
+                onResult(true)
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Error deleting user document", e)
+                onResult(false)
+            }
+    }
 }

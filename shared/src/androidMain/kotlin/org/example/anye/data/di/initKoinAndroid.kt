@@ -30,8 +30,6 @@ actual fun platformModule() = module {
 
     single<LoginService> { LoginServiceAndroid(get()) }
     single<FirestoreService> { FirestoreServiceAndroid() }
-//    factory { GetLoginServiceUseCase(get()) }
-//    factory { LoginViewModel(get()) }
 
     // ViewModels Registrieren:
     viewModel { Profile1ViewModel() }
