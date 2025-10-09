@@ -22,13 +22,18 @@ import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +51,7 @@ import androidx.navigation.NavController
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import kotlinx.coroutines.launch
 import org.example.anye.ui.components.buttons.ClickButton
 import org.example.anye.ui.menu.AnyeBottomBar
 import org.example.anye.viewmodels.LoginViewModel
@@ -53,6 +59,7 @@ import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
 import org.example.anye.shared.R
+import org.example.anye.viewmodels.AuthResult
 import org.koin.androidx.compose.koinViewModel
 
 private const val TAG = "LoginScreen"
@@ -64,15 +71,71 @@ fun LoginScreen(navController: NavController) {
     val currentUser = auth.currentUser?.email
     Log.d(" Authentication", "User email: ${auth.currentUser?.email}")
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AccentColor)
-    ) {
+    val viewModel: LoginViewModel = koinViewModel()
+    // Zustand für den Snackbar erstellen
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    val userData by viewModel.users.collectAsState()
+
+
+    // State-Management mit Jetpack Compose
+    var emailState by remember { mutableStateOf("") }
+    var passwordState by remember { mutableStateOf("") }
+
+    // Auf Events vom ViewModel hören
+    LaunchedEffect(Unit) {
+        viewModel.authResult.collect { result ->
+            when (result) {
+                is AuthResult.Success -> {
+                    snackbarHostState.showSnackbar(message = result.message)
+                }
+
+                is AuthResult.Error -> {
+                    snackbarHostState.showSnackbar(message = result.message)
+                }
+
+                is AuthResult.Initial -> {
+                    // Nichts tun beim Start
+                }
+            }
+        }
+    }
+
+    // Scaffold als Hauptcontainer verwenden
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                // Hole Farbe aus den SnackbarData-Extras
+                val background = when (data.visuals.message) {
+                    in listOf("Anmeldung erfolgreich!", "Erfolgreich abgemeldet") -> Color(0xFF4CAF50) // Grün
+                    "E-Mail oder Passwort ist falsch" -> Color(0xFFF44336) // Rot
+                    else -> Color(0xFF2196F3) // Blau (Standard)
+                }
+                androidx.compose.material3.Snackbar(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    containerColor = background,
+                    contentColor = Color.White,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = data.visuals.message,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+        },
+        containerColor = AccentColor,
+    ) { paddingValues -> // paddingValues berücksichtigt die Systemleisten
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(WindowInsets.systemBars.asPaddingValues()) // Eine Function um den Content unter der Status Bar anzuzeigen.
+                .padding(paddingValues)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
@@ -82,10 +145,10 @@ fun LoginScreen(navController: NavController) {
                     )
                 )
         ) {
-            Row (
+            Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
-            ){
+            ) {
                 Icon(
                     imageVector = Icons.Rounded.ArrowBack,
                     contentDescription = "Zurück",
@@ -104,51 +167,10 @@ fun LoginScreen(navController: NavController) {
                     fontSize = 20.sp,
                     color = Color.White,
                     modifier = Modifier
-                        .clickable{
+                        .clickable {
                             Log.d(TAG, "Navigating to registration screen")
                             navController.navigate("RegistrationScreen")
                         }
-                )
-            }
-
-            val viewModel: LoginViewModel = koinViewModel()
-
-            val userData by viewModel.users.collectAsState()
-
-
-            // State-Management mit Jetpack Compose
-            var emailState by remember { mutableStateOf("") }
-            var passwordState by remember { mutableStateOf("") }
-
-            var loginError by remember { mutableStateOf(false) }
-            if (loginError) {
-                Log.w(TAG, "Showing login error dialog")
-                AlertDialog(
-                    onDismissRequest = {
-                        Log.d(TAG, "Dismissed login error dialog")
-                        // Schließt den Dialog wenn der Benutzer außerhalb tippt
-                        loginError = false
-                    },
-                    title = {
-                        Text(
-                            text = "Fehler bei der Anmeldung",
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    },
-                    text = {
-                        Text("E-Mail oder Passwort ist falsch!")
-                    },
-                    confirmButton = {
-                        Button(
-                            onClick = {
-                                Log.d(TAG, "User acknowledged login error")
-                                loginError = false
-                            }
-                        ) {
-                            Text("OK")
-                        }
-                    }
                 )
             }
 
@@ -212,16 +234,23 @@ fun LoginScreen(navController: NavController) {
                     color = Color.White,
                     modifier = Modifier
                         .padding(start = 150.dp)
-                        .clickable{/* TODO */}
+                        .clickable {/* TODO */ }
                 )
                 Spacer(modifier = Modifier.height(50.dp))
 
                 ClickButton(
                     text = "Anmelden",
                     onClick = {
-//                        signIn(auth, emailState, passwordState)
-                        viewModel.signIn(emailState,passwordState)
-                        Log.d(" Authentication", "User email: ${auth.currentUser?.email}")
+                        if (emailState.isNotBlank() && passwordState.isNotBlank()) {
+                            viewModel.signIn(emailState, passwordState)
+                            Log.d(" Authentication", "User email: ${auth.currentUser?.email}")
+                            emailState = ""
+                            passwordState = ""
+                        } else {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Bitte E-Mail und Passwort eingeben.")
+                            }
+                        }
 
                     },
                     modifier = Modifier
@@ -233,7 +262,7 @@ fun LoginScreen(navController: NavController) {
                 ClickButton(
                     text = "Abmelden",
                     onClick = {
-//                        signOut(auth)
+
                         viewModel.signOut()
                         Log.d(" Authentication", "User email: ${auth.currentUser?.email}")
 
@@ -253,28 +282,4 @@ fun LoginScreen(navController: NavController) {
 }
 
 
-private fun signIn(auth: FirebaseAuth, email: String, password: String){
-    auth.signInWithEmailAndPassword(email,password)
-        .addOnCompleteListener {
-            if (it.isSuccessful){
-                Log.d("MyLog", "Sign In successful")
-            }else{
-                Log.d("MyLog", "Sign In failure")
-            }
-        }
-}
 
-private fun signOut(auth: FirebaseAuth){
-    auth.signOut()
-}
-
-//Anmeldeflow:
-//
-//Nutzer gibt Email/Passwort ein
-//Button-Click löst Suche in userData aus
-//
-//Bei Erfolg:
-//AuthManager aktualisiert globalen State
-//Navigation zum Profil mit Username als Parameter
-//Back-Stack wird gelöscht (kein Zurück zum Login)
-//Bei Fehler: AlertDialog wird angezeigt

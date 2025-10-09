@@ -125,14 +125,14 @@ private val BASE_URL = "https://app.ticketmaster.com/discovery/v2/"
 
 private val API_KEY: String = "X0B57u3BuSKfCFLvWjCPRoFMJtA5xiVQ"
 
-class TicketmasterApiService(private val client: HttpClient){
+class TicketmasterApiService(private val client: HttpClient) {
     suspend fun loadEvents(
         city: String, // Hinzufügen einer Standard-Stadt
         countryCode: String = "DE"
     ): List<TicketmasterEvent> {
         return try {
-            withContext(Dispatchers.IO){
-                val response: TicketmasterSearchResponse = client.get("${BASE_URL}events.json"){
+            withContext(Dispatchers.IO) {
+                val response: TicketmasterSearchResponse = client.get("${BASE_URL}events.json") {
                     parameter("apikey", API_KEY)
                     parameter("city", city) // Default-Stadt-Parameter hinzufügen
                     parameter("countryCode", countryCode) // Default-Länder-Code hinzufügen
@@ -141,7 +141,7 @@ class TicketmasterApiService(private val client: HttpClient){
                 // Hier wird die Liste aus dem verschachtelten Objekt extrahiert
                 response._embedded?.events ?: emptyList()
             }
-        } catch (e: Exception){
+        } catch (e: Exception) {
             logMessage("Fehler beim laden von Events: ${e.message}")
             e.printStackTrace() // Wichtig, um den genauen Fehler im Logcat zu sehen
             emptyList()
