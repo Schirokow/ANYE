@@ -94,6 +94,12 @@ fun RegistrationScreen(navController: NavController) {
             when (result) {
                 is AuthResult.Success -> {
                     snackbarHostState.showSnackbar(message = result.message)
+                    // Navigation nach erfolgreicher Registrierung
+                    navController.navigate("ProfileScreen") {
+                        popUpTo("RegistrationScreen") {
+                            inclusive = true
+                        } // verhindert zurück zur Login-Seite
+                    }
                 }
 
                 is AuthResult.Error -> {
@@ -113,12 +119,7 @@ fun RegistrationScreen(navController: NavController) {
             SnackbarHost(hostState = snackbarHostState) { data ->
                 // Hole Farbe aus den SnackbarData-Extras
                 val background = when (data.visuals.message) {
-                    in listOf(
-                        "Registrierung erfolgreich!",
-                        "Account erfolgreich gelöscht"
-                    ) -> Color(
-                        0xFF4CAF50
-                    ) // Grün
+                        "Registrierung erfolgreich!" -> Color(0xFF4CAF50) // Grün
                     in listOf(
                         "Fehler bei der Registrierung",
                         "Passwörter stimmen nicht überein"
@@ -298,10 +299,10 @@ fun RegistrationScreen(navController: NavController) {
 //                        signUp(auth, emailState, passwordState)
                         if (emailState.isNotBlank() && passwordState.isNotBlank() && userNameState.isNotBlank() && repeatPasswordState.isNotBlank() && passwordState == repeatPasswordState) {
                             viewModel.signUp(emailState, passwordState, userNameState)
-                            userNameState = ""
-                            emailState = ""
-                            passwordState = ""
-                            repeatPasswordState = ""
+//                            userNameState = ""
+//                            emailState = ""
+//                            passwordState = ""
+//                            repeatPasswordState = ""
                         } else if (passwordState != repeatPasswordState) {
                             scope.launch {
                                 snackbarHostState.showSnackbar("Passwörter stimmen nicht überein")
@@ -316,15 +317,15 @@ fun RegistrationScreen(navController: NavController) {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                ClickButton(
-                    text = "Account löschen",
-                    onClick = {
-                        showDeleteDialog = true
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 120.dp)
-                        .fillMaxWidth()
-                )
+//                ClickButton(
+//                    text = "Account löschen",
+//                    onClick = {
+//                        showDeleteDialog = true
+//                    },
+//                    modifier = Modifier
+//                        .padding(horizontal = 120.dp)
+//                        .fillMaxWidth()
+//                )
 
                 // AlerDer Bestätigungsdialog
                 if (showDeleteDialog) {

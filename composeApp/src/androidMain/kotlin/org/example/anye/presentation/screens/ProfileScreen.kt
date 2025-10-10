@@ -31,6 +31,7 @@ import com.example.evoo.ui.components.button.EditIconButton
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -38,9 +39,14 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import org.example.anye.ui.components.buttons.ClickButton
@@ -53,31 +59,22 @@ import com.google.firebase.firestore.firestore
 import org.example.anye.viewmodels.Profile1ViewModel
 import org.example.anye.AccentColor
 import org.example.anye.ui.components.AuthStatusIndicator
+import org.example.anye.viewmodels.AuthResult
+import org.example.anye.viewmodels.LoginViewModel
 import org.koin.androidx.compose.koinViewModel
 
 
 
 @Composable
 fun ProfileScreen (navController: NavController, userId: Int?) {
-//    var selectedTab by remember { mutableStateOf(EventTab.All) }
-//    val displayedEvents = when (selectedTab) {
-//        EventTab.All -> {
-//            Log.d(TAG, "Displaying all events")
-//            sampleEvents
-//        }
-//        EventTab.Favorites -> {
-//            Log.d(TAG, "Displaying favorite events")
-//            sampleEvents.take(2)
-//        }
-//        EventTab.Liked -> {
-//            Log.d(TAG, "Displaying liked events")
-//            sampleEvents.takeLast(2)
-//        }
-//    }
 
+    val viewModel: LoginViewModel = koinViewModel()
     val user = FirebaseAuth.getInstance().currentUser
     val firestore = Firebase.firestore
     var userName by remember { mutableStateOf("") }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(user) {
         user?.uid?.let { uid ->
@@ -88,28 +85,72 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
         }
     }
 
+    // Auf Events vom ViewModel hören
+    LaunchedEffect(Unit) {
+        viewModel.authResult.collect { result ->
+            when (result) {
+                is AuthResult.Success -> {
+                    snackbarHostState.showSnackbar(message = result.message)
+                    // Navigation nach erfolgreichem Logout
+                    navController.navigate("LoginScreen") {
+                        popUpTo("ProfileScreen") {
+                            inclusive = true
+                        } // verhindert zurück zur Login-Seite
+                    }
+                }
 
-    var name by remember { mutableStateOf("") }
+                is AuthResult.Error -> {
+                    snackbarHostState.showSnackbar(message = result.message)
+                }
+
+                is AuthResult.Initial -> {
+                    // Nichts tun beim Start
+                }
+            }
+        }
+    }
+
 
     val itemsPerRow = 3
 
-    Log.d("ProfileScreen", "Profile screen loaded for user: $userId")
-
-    val viewModel: Profile1ViewModel = koinViewModel()
 
 
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AccentColor)
-    ) {
+    // Scaffold als Hauptcontainer verwenden
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                // Hole Farbe aus den SnackbarData-Extras
+                val background = when (data.visuals.message) {
+                    "Erfolgreich abgemeldet" -> Color(0xFF4CAF50) // Grün
+                    "E-Mail oder Passwort ist falsch" -> Color(0xFFF44336) // Rot
+                    else -> Color(0xFF2196F3) // Blau (Standard)
+                }
+                androidx.compose.material3.Snackbar(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    containerColor = background,
+                    contentColor = Color.White,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = data.visuals.message,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+        },
+        containerColor = AccentColor,
+    ) { paddingValues -> // paddingValues berücksichtigt die Systemleisten
 
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(WindowInsets.systemBars.asPaddingValues())
+                .padding(paddingValues)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(TopLightBlue, BottomDarkBlue)
@@ -146,7 +187,6 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
                 Spacer(modifier = Modifier.height(50.dp))
 
                 // NameFeld
-
                 Text(
                     text = "Willkommen $userName",
                     fontWeight = FontWeight.Bold,
@@ -159,7 +199,6 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
 
 
                 //Profilbild mit Edit
-
                 Box(
                     modifier = Modifier
                         .size(100.dp)
@@ -192,17 +231,20 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
 
                 ClickButton(
                     text = "Edit Profile",
-                    onClick = {},
+                    onClick = {
+                        navController.navigate("AccountScreen")
+                    },
                     modifier = Modifier
                 )
 
                 ClickButton(
                     text = "Abmelden",
                     onClick = {
-                        FirebaseAuth.getInstance().signOut()
-                        navController.navigate("LoginScreen") {
-                            popUpTo("ProfileScreen") { inclusive = true }
-                        }
+                        viewModel.signOut()
+//                        FirebaseAuth.getInstance().signOut()
+//                        navController.navigate("LoginScreen") {
+//                            popUpTo("ProfileScreen") { inclusive = true }
+//                        }
                     }
                 )
 

@@ -37,6 +37,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -48,6 +49,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import org.example.anye.AccentColor
+import org.example.anye.BottomDarkBlue
+import org.example.anye.TopLightBlue
 import org.example.anye.ui.components.AuthStatusIndicator
 import org.example.anye.ui.components.buttons.ClickButton
 import org.example.anye.viewmodels.AuthResult
@@ -76,6 +79,12 @@ fun AccountScreen(navController: NavController) {
             when (result) {
                 is AuthResult.Success -> {
                     snackbarHostState.showSnackbar(message = result.message)
+                    // Navigation nach erfolgreichem Löschen
+                    navController.navigate("LoginScreen") {
+                        popUpTo("AccountScreen") {
+                            inclusive = true
+                        } // verhindert zurück zur Login-Seite
+                    }
                 }
 
                 is AuthResult.Error -> {
@@ -125,7 +134,14 @@ fun AccountScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(BackgroundColor)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            TopLightBlue,
+                            BottomDarkBlue
+                        )
+                    )
+                )
         ) {
             // Auth-Status oben rechts
             AuthStatusIndicator(
@@ -293,7 +309,7 @@ fun AccountScreen(navController: NavController) {
                                 onClick = {
                                     showDeleteDialog = false
                                     viewModel.deleteAccount(emailState, passwordState)
-                                    navController.navigate("LoginScreen")
+
                                 },
                                 colors = buttonColors(
                                     containerColor = Color.Red
