@@ -82,7 +82,7 @@ fun RegistrationScreen(navController: NavController) {
     var passwordState by remember { mutableStateOf("") }
     var repeatPasswordState by remember { mutableStateOf("") }
 
-    // 🔥 Zustand für den Bestätigungsdialog
+    // Zustand für den Bestätigungsdialog
     var showDeleteDialog by remember { mutableStateOf(false) }
 
 
@@ -318,10 +318,6 @@ fun RegistrationScreen(navController: NavController) {
                     text = "Account löschen",
                     onClick = {
                         showDeleteDialog = true
-//                        viewModel.deleteAccount(emailState, passwordState)
-////                        deleteAccount(auth,emailState,passwordState)
-//                        Log.d(TAG, "Account gelöscht")
-//                        navController.navigate("LoginScreen")
                     },
                     modifier = Modifier
                         .padding(horizontal = 120.dp)

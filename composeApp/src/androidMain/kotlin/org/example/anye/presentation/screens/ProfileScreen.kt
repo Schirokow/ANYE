@@ -31,31 +31,25 @@ import com.example.evoo.ui.components.button.EditIconButton
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import org.example.anye.data.EventTab
-import org.example.anye.data.sampleEvents
 import org.example.anye.ui.components.buttons.ClickButton
-import org.example.anye.ui.components.card.EventCard
 import org.example.anye.ui.menu.AnyeBottomBar
 import com.example.evoo.ui.theme.colorthemetype.BottomDarkBlue
 import com.example.evoo.ui.theme.colorthemetype.TopLightBlue
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.firestore
 import org.example.anye.viewmodels.Profile1ViewModel
 import org.example.anye.AccentColor
 import org.koin.androidx.compose.koinViewModel
@@ -63,7 +57,7 @@ import org.koin.androidx.compose.koinViewModel
 private const val TAG = "ProfileScreen1"
 
 @Composable
-fun ProfileScreen1 (navController: NavController, userId: Int?) {
+fun ProfileScreen (navController: NavController, userId: Int?) {
 //    var selectedTab by remember { mutableStateOf(EventTab.All) }
 //    val displayedEvents = when (selectedTab) {
 //        EventTab.All -> {
@@ -79,6 +73,21 @@ fun ProfileScreen1 (navController: NavController, userId: Int?) {
 //            sampleEvents.takeLast(2)
 //        }
 //    }
+
+    val user = FirebaseAuth.getInstance().currentUser
+    val firestore = Firebase.firestore
+    var userName by remember { mutableStateOf("") }
+
+    LaunchedEffect(user) {
+        user?.uid?.let { uid ->
+            firestore.collection("users").document(uid).get()
+                .addOnSuccessListener { doc ->
+                    userName = doc.getString("username") ?: user.email ?: ""
+                }
+        }
+    }
+
+
     var name by remember { mutableStateOf("") }
 
     val itemsPerRow = 3
@@ -131,7 +140,7 @@ fun ProfileScreen1 (navController: NavController, userId: Int?) {
                 // NameFeld
 
                 Text(
-                    text = "Willkommen $",
+                    text = "Willkommen $userName",
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     color = Color.White
@@ -182,10 +191,9 @@ fun ProfileScreen1 (navController: NavController, userId: Int?) {
                 ClickButton(
                     text = "Abmelden",
                     onClick = {
-                        Log.i(TAG, "User logout initiated")
-//                        AuthManager.logout() //Zustand zurücksetzen
+                        FirebaseAuth.getInstance().signOut()
                         navController.navigate("LoginScreen") {
-                            popUpTo("HomeScreen") { inclusive = true } //Löscht Back-Stack
+                            popUpTo("ProfileScreen") { inclusive = true }
                         }
                     }
                 )

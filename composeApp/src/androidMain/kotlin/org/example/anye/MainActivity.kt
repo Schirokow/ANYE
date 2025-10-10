@@ -13,17 +13,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
 import org.example.anye.presentation.screens.ContentDetailScreen
+import org.example.anye.presentation.screens.FavoriteScreen
 import org.example.anye.presentation.screens.HomeScreen
 import org.example.anye.presentation.screens.LocationScreen
 import org.example.anye.presentation.screens.LoginScreen
-import org.example.anye.presentation.screens.ProfileScreen1
+import org.example.anye.presentation.screens.ProfileScreen
 import org.example.anye.presentation.screens.RegistrationScreen
-import org.example.anye.presentation.screens.FavoriteScreen
 import org.example.anye.presentation.screens.SettingScreen
 import org.example.anye.viewmodels.LoginViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -57,8 +53,9 @@ fun Navigation() {
     // Dynamische Startseite abhängig vom User
     val startDestination = if (viewModel.getCurrentUser() == null) {
         "LoginScreen"
+
     } else {
-        "LocationScreen"
+        "ProfileScreen"
     }
 
     NavHost(
@@ -100,15 +97,8 @@ fun Navigation() {
             ContentDetailScreen(navController, id)
         }
 
-        composable(
-            "ProfileScreen1/{userId}",
-            arguments = listOf(navArgument("userId") {
-                type = NavType.IntType
-            })
-        ) { backStackEntry ->
-            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
-            Log.d(TAG, "Navigating to ProfileScreen1 for user with id: $userId")
-            ProfileScreen1(navController, userId)
+        composable("ProfileScreen") {
+            ProfileScreen(navController, null)
         }
     }
 }
