@@ -68,6 +68,7 @@ import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
 import org.example.anye.data.TicketmasterEvent
+import org.example.anye.ui.components.AuthStatusIndicator
 import org.koin.androidx.compose.koinViewModel
 
 
@@ -99,6 +100,13 @@ fun HomeScreen(navController: NavController){
                     BottomDarkBlue
                 )))
         ){
+            // Auth-Status oben rechts
+            AuthStatusIndicator(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(24.dp)
+            )
+
             Column (
                 modifier = Modifier
                     .fillMaxWidth()

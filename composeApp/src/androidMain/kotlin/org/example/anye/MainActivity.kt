@@ -5,25 +5,40 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
+import com.google.firebase.auth.FirebaseAuth
+import org.example.anye.presentation.screens.AccountScreen
 import org.example.anye.presentation.screens.ContentDetailScreen
+import org.example.anye.presentation.screens.FavoriteScreen
 import org.example.anye.presentation.screens.HomeScreen
 import org.example.anye.presentation.screens.LocationScreen
 import org.example.anye.presentation.screens.LoginScreen
-import org.example.anye.presentation.screens.ProfileScreen1
+import org.example.anye.presentation.screens.ProfileScreen
 import org.example.anye.presentation.screens.RegistrationScreen
-import org.example.anye.presentation.screens.FavoriteScreen
 import org.example.anye.presentation.screens.SettingScreen
 import org.example.anye.viewmodels.LoginViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -43,7 +58,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Preview
+
 @Composable
 fun Navigation() {
 
@@ -57,9 +72,11 @@ fun Navigation() {
     // Dynamische Startseite abhängig vom User
     val startDestination = if (viewModel.getCurrentUser() == null) {
         "LoginScreen"
+
     } else {
-        "LocationScreen"
+        "ProfileScreen"
     }
+
 
     NavHost(
         navController = navController,
@@ -100,17 +117,15 @@ fun Navigation() {
             ContentDetailScreen(navController, id)
         }
 
-        composable(
-            "ProfileScreen1/{userId}",
-            arguments = listOf(navArgument("userId") {
-                type = NavType.IntType
-            })
-        ) { backStackEntry ->
-            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
-            Log.d(TAG, "Navigating to ProfileScreen1 for user with id: $userId")
-            ProfileScreen1(navController, userId)
+        composable("ProfileScreen") {
+            ProfileScreen(navController, null)
+        }
+
+        composable("AccountScreen") {
+            AccountScreen(navController)
         }
     }
+
 }
 
 //Navigationsmechanismus:
@@ -119,6 +134,7 @@ fun Navigation() {
 //navArgument: Definiert den erwarteten Typ
 //backStackEntry.arguments: Zugriff auf übergebene Parameter
 //Sicherer Zugriff mit Elvis-Operator: ?: "Default"
+
 
 // Selbstdefinierte Farben für Hintergrund und Vordergrund.
 val BackgroundColor = Color(0xFF20587B)

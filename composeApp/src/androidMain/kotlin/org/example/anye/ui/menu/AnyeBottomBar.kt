@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.currentBackStackEntryAsState
 //import com.example.evoo.business.AuthManager
 import androidx.compose.runtime.getValue
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun rememberFakeNavController(): NavController {
@@ -58,6 +59,7 @@ fun AnyeBottomBar(navController: NavController)
 //)
 {
 //    val currentUser = AuthManager.currentUser //Aktuellen Benutzer abrufen
+    val currentUser = FirebaseAuth.getInstance().currentUser
 
     // Zustände für jedes Element
     val (homeSelected, setHomeSelected) = remember { mutableStateOf(false) }
@@ -76,7 +78,7 @@ fun AnyeBottomBar(navController: NavController)
         setHomeSelected(currentRoute == "HomeScreen")
         setFavoriteSelected(currentRoute == "FavoriteScreen")
         setProfileSelected(
-            currentRoute?.startsWith("ProfileScreen1") == true ||
+            currentRoute?.startsWith("ProfileScreen") == true ||
                     currentRoute == "LoginScreen" ||
                     currentRoute == "RegisterScreen"
         )
@@ -120,15 +122,15 @@ fun AnyeBottomBar(navController: NavController)
                 Spacer(modifier = Modifier.width(56.dp))
 
                 IconButton(onClick = {
-                    Log.d("Navigation","Navigating to ProfileScreen1")
-                    navController.navigate("LoginScreen")
-//                    if (currentUser != null) {
-//                        // Navigiere zum Profil mit Benutzernamen
-//                        navController.navigate("ProfileScreen1/${currentUser.name}")
-//                    } else {
-//                        // Fallback zur Login-Seite
-//                        navController.navigate("LoginScreen")
-//                    }
+//                    Log.d("Navigation","Navigating to ProfileScreen")
+//                    navController.navigate("LoginScreen")
+                    if (currentUser != null) {
+                        // Navigiere zum Profil mit Benutzernamen
+                        navController.navigate("ProfileScreen")
+                    } else {
+                        // Fallback zur Login-Seite
+                        navController.navigate("LoginScreen")
+                    }
                 }) {
                     Icon(
                         imageVector = Icons.Filled.Person,
