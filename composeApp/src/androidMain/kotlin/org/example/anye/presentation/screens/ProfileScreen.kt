@@ -52,9 +52,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
 import org.example.anye.viewmodels.Profile1ViewModel
 import org.example.anye.AccentColor
+import org.example.anye.ui.components.AuthStatusIndicator
 import org.koin.androidx.compose.koinViewModel
 
-private const val TAG = "ProfileScreen1"
+
 
 @Composable
 fun ProfileScreen (navController: NavController, userId: Int?) {
@@ -92,7 +93,7 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
 
     val itemsPerRow = 3
 
-    Log.d(TAG, "Profile screen loaded for user: $userId")
+    Log.d("ProfileScreen", "Profile screen loaded for user: $userId")
 
     val viewModel: Profile1ViewModel = koinViewModel()
 
@@ -104,6 +105,7 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
             .background(AccentColor)
     ) {
 
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -114,6 +116,12 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
                     )
                 )
         ) {
+            // Auth-Status oben rechts
+            AuthStatusIndicator(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(24.dp)
+            )
             Icon(
                 imageVector = Icons.Rounded.ArrowBack,
                 contentDescription = "Zurück",
@@ -123,7 +131,7 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
                     .padding(24.dp)
                     .size(34.dp)
                     .clickable {
-                        Log.d(TAG, "Navigation: Returning to previous screen")
+                        Log.d("ProfileScreen", "Navigation: Returning to previous screen")
                         navController.popBackStack()
                     }
             )

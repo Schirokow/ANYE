@@ -48,6 +48,7 @@ import android.net.Uri
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
+import org.example.anye.ui.components.AuthStatusIndicator
 import org.example.anye.viewmodels.HomeViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -119,6 +120,13 @@ fun ContentDetailScreen(navController: NavController, id: String){
                     BottomDarkBlue
                 )))
         ) {
+
+            // Auth-Status oben rechts
+            AuthStatusIndicator(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(24.dp)
+            )
 
             Icon(
                 imageVector = Icons.Rounded.ArrowBack,

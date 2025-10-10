@@ -54,8 +54,6 @@ import org.example.anye.viewmodels.AuthResult
 import org.example.anye.viewmodels.LoginViewModel
 import org.koin.androidx.compose.koinViewModel
 
-private const val TAG = "LoginScreen"
-
 @Composable
 fun LoginScreen(navController: NavController) {
 

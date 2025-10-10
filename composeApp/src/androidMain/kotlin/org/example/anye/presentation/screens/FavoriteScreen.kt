@@ -56,6 +56,7 @@ import org.example.anye.viewmodels.FavoriteViewModel
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
+import org.example.anye.ui.components.AuthStatusIndicator
 import org.example.anye.ui.components.buttons.ClickButton
 import org.example.anye.ui.components.card.NewEventCard
 import org.example.anye.ui.menu.AnyeBottomBar
@@ -63,7 +64,7 @@ import org.example.anye.viewmodels.HomeViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun FavoriteScreen(navController: NavController){
+fun FavoriteScreen(navController: NavController) {
     val TAG = "FavoriteScreen"
     Log.d(TAG, "Favorite screen initialized")
 
@@ -77,20 +78,32 @@ fun FavoriteScreen(navController: NavController){
         modifier = Modifier
             .fillMaxSize()
             .background(AccentColor)
-    ){
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(WindowInsets.systemBars.asPaddingValues()) // Eine Function um den Content unter der Status Bar anzuzeigen.
-                .background(brush = Brush.verticalGradient(colors = listOf(
-                    TopLightBlue,
-                    BottomDarkBlue
-                )))
-        ){
-            Row (
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            TopLightBlue,
+                            BottomDarkBlue
+                        )
+                    )
+                )
+        ) {
+            // Auth-Status oben rechts
+            AuthStatusIndicator(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(24.dp)
+            )
+
+
+            Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
-            ){
+            ) {
                 Icon(
                     imageVector = Icons.Rounded.ArrowBack,
                     contentDescription = "Zurück",
@@ -142,6 +155,7 @@ fun FavoriteScreen(navController: NavController){
     }
 
 }
+
 @Composable
 fun FavoriteContent(navController: NavController, viewModel: FavoriteViewModel) {
     val TAG = "FavoriteContent"
@@ -177,7 +191,10 @@ fun FavoriteContent(navController: NavController, viewModel: FavoriteViewModel) 
                     title = event.name,
                     datum = event.date,
                     onClick = {
-                        Log.d(TAG, "Event card clicked - id: ${event.eventId}, title: ${event.name.take(15)}...")
+                        Log.d(
+                            TAG,
+                            "Event card clicked - id: ${event.eventId}, title: ${event.name.take(15)}..."
+                        )
                         selectedEventData = event
                     },
                     isLarge = true,
