@@ -74,11 +74,11 @@ import org.koin.androidx.compose.koinViewModel
 
 // Startseite
 @Composable
-fun HomeScreen(navController: NavController){
+fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinViewModel()) {
     val TAG = "HomeScreen"
     Log.d(TAG, "Home screen initialized")
 
-    val viewModel: HomeViewModel = koinViewModel()
+//    val viewModel: HomeViewModel = koinViewModel()
     var showDeleteDialog by remember { mutableStateOf(false) }
     val isLoading by viewModel.isLoading.collectAsState()
     val coroutineScope = rememberCoroutineScope()
@@ -90,16 +90,20 @@ fun HomeScreen(navController: NavController){
         modifier = Modifier
             .fillMaxSize()
             .background(AccentColor)
-    ){
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(WindowInsets.systemBars.asPaddingValues()) // Eine Function um den Content unter der Status Bar anzuzeigen.
-                .background(brush = Brush.verticalGradient(colors = listOf(
-                    TopLightBlue,
-                    BottomDarkBlue
-                )))
-        ){
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            TopLightBlue,
+                            BottomDarkBlue
+                        )
+                    )
+                )
+        ) {
             // Auth-Status oben rechts
             AuthStatusIndicator(
                 modifier = Modifier
@@ -107,15 +111,15 @@ fun HomeScreen(navController: NavController){
                     .padding(24.dp)
             )
 
-            Column (
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 25.dp)
-            ){
+            ) {
                 OutlinedTextField(
                     value = city,
                     singleLine = true,
-                    placeholder = {Text("Stadt eingeben", color = Color.White)},
+                    placeholder = { Text("Stadt eingeben", color = Color.White) },
                     textStyle = TextStyle(color = Color.White),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Yellow,
@@ -124,17 +128,17 @@ fun HomeScreen(navController: NavController){
                     onValueChange = { city = it },
                     modifier = Modifier.padding(start = 65.dp)
                 )
-                Row (
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
-                ){
+                ) {
                     ClickButton(
                         text = "Laden",
                         onClick = {
-                            if (city.isNotBlank()){
+                            if (city.isNotBlank()) {
 //                            viewModel.loadAllFestivals()
                                 viewModel.loadAllEvents(city)
                                 city = ""
@@ -146,7 +150,7 @@ fun HomeScreen(navController: NavController){
 
                     ClickButton(
                         text = "Löschen",
-                        onClick = {showDeleteDialog = true},
+                        onClick = { showDeleteDialog = true },
                         modifier = Modifier.width(150.dp)
                     )
 
@@ -155,10 +159,10 @@ fun HomeScreen(navController: NavController){
             }
             when {
                 isLoading -> {
-                    Box (
+                    Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
-                    ){
+                    ) {
                         CircularProgressIndicator(color = Color.White)
                         Text(
                             text = "Lade...",
@@ -168,6 +172,7 @@ fun HomeScreen(navController: NavController){
                         )
                     }
                 }
+
                 else -> {
                     // Funktion für die Vorschau.
                     EventContent(navController)
@@ -204,12 +209,11 @@ fun HomeScreen(navController: NavController){
 }
 
 
-
 @Composable
-fun EventContent(navController: NavController) {
+fun EventContent(navController: NavController, viewModel: HomeViewModel = koinViewModel()) {
 
     val TAG = "EventContent"
-    val viewModel: HomeViewModel = koinViewModel()
+//    val viewModel: HomeViewModel = koinViewModel()
     val eventsDataList by viewModel.eventsData.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val favoriteStates = remember { mutableStateMapOf<String, Boolean>() }
@@ -226,7 +230,7 @@ fun EventContent(navController: NavController) {
     // Schutz vor leeren Listen
     if (
         eventsDataList.isEmpty()
-        ) {
+    ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Keine Events geladen", color = Color.White, fontSize = 20.sp)
         }
@@ -234,44 +238,49 @@ fun EventContent(navController: NavController) {
     }
 
     // State, um ausgewählte EventData zu speichern
-    var selectedEventData by remember { mutableStateOf<TicketmasterEvent?>(null).also {
-        Log.d(TAG, "Selected festival state initialized")
-    } }
+    var selectedEventData by remember {
+        mutableStateOf<TicketmasterEvent?>(null).also {
+            Log.d(TAG, "Selected festival state initialized")
+        }
+    }
 
     Log.d(TAG, "Rendering event grid with ${eventsDataList.size} items")
 
 
-            LazyVerticalGrid(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 155.dp),
-                contentPadding = PaddingValues(
-                    top = 16.dp,
-                    bottom = 500.dp
-                ),
-                columns = GridCells.Fixed(2)
-            ){
-                itemsIndexed(eventsDataList){ index, event ->
+    LazyVerticalGrid(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 155.dp),
+        contentPadding = PaddingValues(
+            top = 16.dp,
+            bottom = 500.dp
+        ),
+        columns = GridCells.Fixed(2)
+    ) {
+        itemsIndexed(eventsDataList) { index, event ->
 
-                    Box(
-                        modifier = Modifier
-                            .padding(6.dp)
-                            .aspectRatio(1f)
-                    ){
-                        NewEventCard(
-                            image = event.images,
-                            title = event.name,
-                            datum = event.dates?.start?.localDate,
-                            onClick = {
-                                Log.d(TAG, "Festival card clicked - id: ${event.id}, title: ${event.name.take(15)}...")
-                                selectedEventData = event
-                            },
-                            isLarge = true,
-                            modifier = Modifier
+            Box(
+                modifier = Modifier
+                    .padding(6.dp)
+                    .aspectRatio(1f)
+            ) {
+                NewEventCard(
+                    image = event.images,
+                    title = event.name,
+                    datum = event.dates?.start?.localDate,
+                    onClick = {
+                        Log.d(
+                            TAG,
+                            "Festival card clicked - id: ${event.id}, title: ${event.name.take(15)}..."
                         )
-                    }
-                }
+                        selectedEventData = event
+                    },
+                    isLarge = true,
+                    modifier = Modifier
+                )
             }
+        }
+    }
 
 
     val animateScale by animateFloatAsState(
@@ -286,25 +295,25 @@ fun EventContent(navController: NavController) {
         Surface(
             color = BackgroundColor.copy(alpha = 0.9f), // Farbe von Hintergrund
             modifier = Modifier.fillMaxSize(),
-            onClick = { /*selectedEventData = null */} // Klick außerhalb schließt das Overlay
+            onClick = { /*selectedEventData = null */ } // Klick außerhalb schließt das Overlay
         ) {
-            Box (
+            Box(
                 modifier = Modifier.fillMaxSize()
-            ){
-                Column (
+            ) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 100.dp),
 //                        .align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally
-                ){
+                ) {
                     NewEventCard(
                         image = event.images,
                         title = event.name,
                         datum = event.dates?.start?.localDate,
                         onClick = {
                             Log.d(TAG, "Navigating to detail screen for id: ${event.id}")
-                                navController.navigate("ContentDetailScreen/${event.id}")
+                            navController.navigate("ContentDetailScreen/${event.id}")
                         },
                         isLarge = true,
                         textIsLarge = true,
@@ -324,11 +333,11 @@ fun EventContent(navController: NavController) {
                         .align(alignment = Alignment.TopStart)
                         .padding(24.dp)
                         .size(34.dp)
-                        .clickable{
+                        .clickable {
                             Log.d(TAG, "Close button clicked, hiding detail view")
                             selectedEventData = null
                         }
-                    )
+                )
 
                 Icon(
                     imageVector = if (favoriteStates[event.id] == true) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
@@ -338,7 +347,7 @@ fun EventContent(navController: NavController) {
                         .align(alignment = Alignment.TopEnd)
                         .padding(24.dp)
                         .size(34.dp)
-                        .clickable{
+                        .clickable {
                             Log.i(TAG, "Favorite button clicked for id: ${event.id}")
                             viewModel.toggleFavorite(event)
                             favoriteStates[event.id] = !(favoriteStates[event.id] ?: false)

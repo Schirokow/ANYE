@@ -40,6 +40,7 @@ import org.example.anye.presentation.screens.LoginScreen
 import org.example.anye.presentation.screens.ProfileScreen
 import org.example.anye.presentation.screens.RegistrationScreen
 import org.example.anye.presentation.screens.SettingScreen
+import org.example.anye.viewmodels.HomeViewModel
 import org.example.anye.viewmodels.LoginViewModel
 import org.koin.androidx.compose.koinViewModel
 

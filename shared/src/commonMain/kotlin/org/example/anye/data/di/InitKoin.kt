@@ -55,11 +55,11 @@ val commonModule = module {
 
 
     single<EventsRepository> { EventsRepositoryImpl(get()) }
-    single { GetEventsUseCase(get()) }
+    single { GetEventsUseCase() }
     single { GetEventByIdUseCase(get()) }
 
     single <FavoriteRepository>{ FavoriteRepositoryImpl(get()) }
-    single { GetFavoriteUseCase(get()) }
+    single { GetFavoriteUseCase() }
 
 
     single { GetLoginServiceUseCase(get()) }

@@ -149,7 +149,7 @@ fun RegistrationScreen(navController: NavController) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues) // Eine Function um den Content unter der Status Bar anzuzeigen.
+                .padding(paddingValues)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(

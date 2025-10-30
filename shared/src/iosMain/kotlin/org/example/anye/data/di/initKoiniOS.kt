@@ -31,8 +31,8 @@ actual fun platformModule() = module {
     // ViewModels registrieren:
     single { HomeViewModel(getFavoriteUseCase = get(), getEventsUseCase = get()) }
     single { FavoriteViewModel(getFavoriteUseCase = get()) }
-    single { LoginViewModel(getUsersUseCase = get(), getLoginServiceUseCase = get()) }
-    single { Profile1ViewModel(getUsersUseCase = get()) }
+    single { LoginViewModel(getLoginServiceUseCase = get()) }
+    single { Profile1ViewModel() }
     single {  ContentDetailViewModel(
         getFavoriteUseCase = get(),
         eventsUseCase = get(),
