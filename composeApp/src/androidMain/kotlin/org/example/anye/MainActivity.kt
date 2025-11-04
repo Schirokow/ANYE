@@ -43,6 +43,7 @@ import org.example.anye.presentation.screens.SettingScreen
 import org.example.anye.viewmodels.HomeViewModel
 import org.example.anye.viewmodels.LoginViewModel
 import org.koin.androidx.compose.koinViewModel
+import java.net.URLDecoder
 
 private const val TAG = "MainActivity"
 
@@ -100,9 +101,45 @@ fun Navigation() {
             Log.d(TAG, "Navigating to LoginScreen")
             LoginScreen(navController)
         }
-        composable("LocationScreen") {
-            Log.d(TAG, "Navigating to LocationScreen")
-            LocationScreen(navController)
+        composable(
+            // 1. Route definieren, um optionale Argumente anzunehmen
+            route = "LocationScreen?lat={lat}&lng={lng}&eventName={eventName}",
+            arguments = listOf(
+                navArgument("lat") {
+                    type = NavType.StringType // Als String übergeben, da sie aus der API als String kommen
+                    nullable = true
+                },
+                navArgument("lng") {
+                    type = NavType.StringType
+                    nullable = true
+                },
+                navArgument("eventName") {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) { backStackEntry ->
+            // 2. Argumente auslesen und in Doubles umwandeln
+            val eventLat = backStackEntry.arguments?.getString("lat")?.toDoubleOrNull()
+            val eventLng = backStackEntry.arguments?.getString("lng")?.toDoubleOrNull()
+
+            // Argument auslesen und dekodieren
+            val eventName = backStackEntry.arguments?.getString("eventName")
+            val decodedEventName = eventName?.let {
+                try {
+                    URLDecoder.decode(it, "UTF-8")
+                } catch (e: Exception) {
+                    "Event" // Fallback
+                }
+            }
+
+            // 3. Die Werte an deinen Screen übergeben
+            LocationScreen(
+                navController = navController,
+                eventLat = eventLat,
+                eventLng = eventLng,
+                eventName = decodedEventName
+            )
         }
         composable("RegistrationScreen") {
             Log.d(TAG, "Navigating to RegistrationScreen")

@@ -51,6 +51,7 @@ import org.example.anye.TopLightBlue
 import org.example.anye.ui.components.AuthStatusIndicator
 import org.example.anye.viewmodels.HomeViewModel
 import org.koin.androidx.compose.koinViewModel
+import java.net.URLEncoder
 
 
 @Composable
@@ -160,7 +161,35 @@ fun ContentDetailScreen(navController: NavController, id: String){
                 text = "Auf der Karte",
                 onClick = {
                     Log.d(TAG, "Navigating to location screen")
-                    navController.navigate("LocationScreen")
+
+                    // 1. Hole die Location-Daten aus dem Event-Objekt
+                    val venue = event?._embedded?.venues?.firstOrNull()
+                    val lat = venue?.location?.latitude
+                    val lng = venue?.location?.longitude
+
+                    // Hole den Event-Namen
+                    // (Wir nehmen "Event" als Fallback, falls der Name null ist)
+                    val eventName = event?.name ?: "Event"
+
+                    //  URL-Encoding für den Namen
+                    // Dies ist SEHR WICHTIG, damit Namen mit Leerzeichen (z.B. "Cool Event")
+                    // die Navigationsroute nicht zerstören.
+                    val encodedEventName = try {
+                        URLEncoder.encode(eventName, "UTF-8")
+                    } catch (e: Exception) {
+                        "Event" // Fallback
+                    }
+
+
+                    // 2. Prüfe, ob die Daten vorhanden sind
+                    if (lat != null && lng != null) {
+                        // 3. Navigiere mit den Koordinaten als Parameter
+                        navController.navigate("LocationScreen?lat=$lat&lng=$lng")
+                    } else {
+                        // Optional: Zeige eine Meldung, wenn keine Location vorhanden ist
+                        Log.w(TAG, "Keine Location-Daten für dieses Event verfügbar.")
+                        // Hier könntest du eine Snackbar anzeigen
+                    }
                           },
                 modifier = Modifier
                     .align(Alignment.TopCenter)

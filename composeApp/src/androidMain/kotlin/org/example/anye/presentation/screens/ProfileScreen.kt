@@ -165,7 +165,7 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
             )
             Icon(
                 imageVector = Icons.Rounded.ArrowBack,
-                contentDescription = "Zurück",
+                contentDescription = "Back",
                 tint = Color.White,
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
