@@ -22,27 +22,34 @@ import org.example.anye.TopLightBlue
 
 fun ClickButton(
     text: String = "Press here",
-    onClick: () -> Unit ={},
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Button (
+    Button(
         onClick = onClick,
         modifier = modifier
-            .indication(interactionSource = remember { MutableInteractionSource() },
-                indication = LocalIndication.current),
-             colors = ButtonDefaults.buttonColors(containerColor = TopLightBlue, contentColor = Color.White)
-     ,
+            .indication(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = LocalIndication.current
+            ),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = TopLightBlue,
+            contentColor = Color.White
+        ),
         elevation = ButtonDefaults.buttonElevation(
             defaultElevation = 10.dp,
             pressedElevation = 6.dp
         ),
-        border = BorderStroke(2.dp, Brush.verticalGradient(
-                colors = listOf(Color.Gray.copy(alpha = 0.3f), Color.Gray.copy(alpha = 0.9f)))),
+        border = BorderStroke(
+            2.dp, Brush.verticalGradient(
+                colors = listOf(Color.Gray.copy(alpha = 0.3f), Color.Gray.copy(alpha = 0.9f))
+            )
+        ),
         shape = RoundedCornerShape(12.dp)
     )
     {
         Text(text = text)
-}
+    }
 
 
 }

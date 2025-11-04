@@ -10,6 +10,8 @@ import com.rickclephas.kmp.observableviewmodel.launch
 import com.rickclephas.kmp.observableviewmodel.launch
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import org.example.anye.logMessage
 import org.example.anye.usecases.GetFavoriteUseCase
 
@@ -31,6 +33,7 @@ class HomeViewModel(
 
 
     fun loadAllEvents(city: String) {
+
         viewModelScope.launch {
             _isLoading.value = true
             getEventsUseCase.getEventsFlow(city).collect { evetnts ->
