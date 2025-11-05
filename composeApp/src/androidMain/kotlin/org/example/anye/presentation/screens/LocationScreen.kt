@@ -180,20 +180,47 @@ fun OpenStreetMapDisplay(
                     view.overlays.removeIf { true } // Alle Marker löschen
 
                     // 7a. Event-Marker hinzufügen (falls vorhanden)
-                    eventGeoPoint?.let {
+                    eventGeoPoint?.let { eventPoint ->
+                        // --- DISTANZBERECHNUNG ---
+                        var distanceString: String? = null
+                        if (locationPermissionState.status.isGranted && lastLocation != null) {
+                            // osmdroid GeoPoint.distanceToAsDouble() gibt Meter zurück
+                            val distanceInMeters = eventPoint.distanceToAsDouble(lastLocation!!)
+                            distanceString = formatDistance(distanceInMeters.toFloat())
+                        }
+
+
                         val eventMarker = Marker(view).apply {
-                            position = it
+                            position = eventPoint
                             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
 
                             // 5. Titel und Icon setzen!
                             title = eventName ?: "Event-Standort"
 
+                            // --- SNIPPET (TEXT UNTER TITEL) SETZEN ---
+                            snippet = when {
+                                distanceString != null -> "Entfernung: $distanceString"
+                                locationPermissionState.status.isGranted -> "Entfernung wird berechnet..."
+                                else -> "Standortberechtigung fehlt"
+                            }
+
                             // 6. Lade das Drawable
                             val icon = ContextCompat.getDrawable(context, R.drawable.ic_event_pin)
                             icon?.let { setIcon(it) }
 
+                            // Info-Fenster MUSS (erneut) angezeigt werden, um das Update zu sehen
+                            if (isInfoWindowShown) {
+                                // Wenn es schon offen war, schließe und öffne es neu,
+                                // um den "snippet"-Text zu aktualisieren.
+                                closeInfoWindow()
+                                showInfoWindow()
+                            } else {
+                                // Ansonsten einfach beim ersten Mal anzeigen.
+                                showInfoWindow()
+                            }
+
                             // 7. Optional: Info-Fenster sofort anzeigen
-                            showInfoWindow()
+//                            showInfoWindow()
                         }
                         view.overlays.add(eventMarker)
                     }
@@ -311,6 +338,21 @@ fun LocationHandler(onLocationUpdate: (Location) -> Unit) {
         }
     }
 }
+
+
+private fun formatDistance(meters: Float): String {
+    return if (meters < 1000) {
+        // Z.B. "750 m"
+        "${meters.toInt()} m"
+    } else {
+        // Z.B. "1.2 km"
+        val kilometers = meters / 1000.0
+        // Benutze DecimalFormat für eine saubere Formatierung (z.B. 1,2 statt 1.2345)
+        val df = java.text.DecimalFormat("#.#")
+        "${df.format(kilometers)} km"
+    }
+}
+
 
 
 val eventOrange = Color(0xFFE64A19)
