@@ -51,7 +51,7 @@ fun SettingScreen(navController: NavController){
             AuthStatusIndicator(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(24.dp)
+                    .padding(4.dp)
             )
 
 

@@ -83,11 +83,26 @@ fun LocationScreen(
                 .padding(paddingValues)
                 .background(BackgroundColor)
         ) {
+
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+
+                // 2. Übergebe die Parameter an die Karten-Composable
+                OpenStreetMapDisplay( // Umbenannt für Klarheit
+                    eventLat = eventLat,
+                    eventLng = eventLng,
+                    eventName = eventName
+                )
+            }
+
+
             // Auth-Status oben rechts
             AuthStatusIndicator(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(24.dp)
+                    .padding(4.dp)
             )
 
             Icon(
@@ -105,18 +120,7 @@ fun LocationScreen(
             )
 
 
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
 
-                // 2. Übergebe die Parameter an die Karten-Composable
-                OpenStreetMapDisplay( // Umbenannt für Klarheit
-                    eventLat = eventLat,
-                    eventLng = eventLng,
-                    eventName = eventName
-                )
-            }
             AnyeBottomBar(navController)
         }
     }
@@ -153,7 +157,7 @@ fun OpenStreetMapDisplay(
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
             minZoomLevel = 10.0
-            maxZoomLevel = 40.0
+            maxZoomLevel = 30.0
             controller.setZoom(zoomLevel)
 
             // 5. Setze den initialen Mittelpunkt

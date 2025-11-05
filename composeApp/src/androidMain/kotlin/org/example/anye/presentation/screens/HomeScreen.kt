@@ -108,7 +108,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
             AuthStatusIndicator(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(24.dp)
+                    .padding(4.dp)
             )
 
             Column(

@@ -126,7 +126,7 @@ fun ContentDetailScreen(navController: NavController, id: String){
             AuthStatusIndicator(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(24.dp)
+                    .padding(4.dp)
             )
 
             Icon(

@@ -161,7 +161,7 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
             AuthStatusIndicator(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(24.dp)
+                    .padding(4.dp)
             )
             Icon(
                 imageVector = Icons.Rounded.ArrowBack,
