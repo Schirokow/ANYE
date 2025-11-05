@@ -184,7 +184,7 @@ fun ContentDetailScreen(navController: NavController, id: String){
                     // 2. Prüfe, ob die Daten vorhanden sind
                     if (lat != null && lng != null) {
                         // 3. Navigiere mit den Koordinaten als Parameter
-                        navController.navigate("LocationScreen?lat=$lat&lng=$lng")
+                        navController.navigate("LocationScreen?lat=$lat&lng=$lng&eventName=$encodedEventName")
                     } else {
                         // Optional: Zeige eine Meldung, wenn keine Location vorhanden ist
                         Log.w(TAG, "Keine Location-Daten für dieses Event verfügbar.")
