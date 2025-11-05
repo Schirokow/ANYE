@@ -7,17 +7,13 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Looper
 import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.Button
@@ -41,8 +37,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import org.example.anye.ui.menu.AnyeBottomBar
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -50,15 +46,14 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import org.example.anye.AccentColor
+import org.example.anye.R
 import org.example.anye.ui.components.AuthStatusIndicator
+import org.example.anye.ui.menu.AnyeBottomBar
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import androidx.core.content.ContextCompat
-import org.example.anye.R
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -74,29 +69,22 @@ fun LocationScreen(
     // Scaffold als Hauptcontainer verwenden
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        containerColor = AccentColor,
+//        containerColor = AccentColor,
     ) { paddingValues -> // paddingValues berücksichtigt die Systemleisten
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(BackgroundColor)
+//                .background(BackgroundColor)
         ) {
 
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-
-                // 2. Übergebe die Parameter an die Karten-Composable
-                OpenStreetMapDisplay( // Umbenannt für Klarheit
-                    eventLat = eventLat,
-                    eventLng = eventLng,
-                    eventName = eventName
-                )
-            }
-
+            // 2. Übergebe die Parameter an die Karten-Composable
+            OpenStreetMapDisplay(
+                eventLat = eventLat,
+                eventLng = eventLng,
+                eventName = eventName
+            )
 
             // Auth-Status oben rechts
             AuthStatusIndicator(
@@ -108,18 +96,16 @@ fun LocationScreen(
             Icon(
                 imageVector = Icons.Rounded.ArrowBack,
                 contentDescription = "Back",
-                tint = Color.Yellow,
+                tint = eventOrange,
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
-                    .padding(24.dp)
+                    .padding(4.dp)
                     .size(34.dp)
                     .clickable {
                         Log.d("LocationScreen", "Navigation: Returning to previous screen")
                         navController.popBackStack()
                     }
             )
-
-
 
             AnyeBottomBar(navController)
         }
@@ -145,7 +131,6 @@ fun OpenStreetMapDisplay(
             null
         }
     }
-
 
     // OSMDroid Konfiguration
     LaunchedEffect(Unit) {
@@ -245,7 +230,7 @@ fun OpenStreetMapDisplay(
         ) {
             Button(
                 onClick = {
-                    zoomLevel = (zoomLevel + 1).coerceAtMost(20.0)
+                    zoomLevel = (zoomLevel + 1).coerceAtMost(30.0)
                     mapView?.controller?.setZoom(zoomLevel)
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -257,7 +242,7 @@ fun OpenStreetMapDisplay(
             }
             Button(
                 onClick = {
-                    zoomLevel = (zoomLevel - 1).coerceAtLeast(12.0)
+                    zoomLevel = (zoomLevel - 1).coerceAtLeast(10.0)
                     mapView?.controller?.setZoom(zoomLevel)
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -326,3 +311,6 @@ fun LocationHandler(onLocationUpdate: (Location) -> Unit) {
         }
     }
 }
+
+
+val eventOrange = Color(0xFFE64A19)
