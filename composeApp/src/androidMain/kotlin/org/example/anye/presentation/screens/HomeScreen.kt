@@ -23,12 +23,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -63,12 +65,19 @@ import kotlinx.coroutines.launch
 
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
 import org.example.anye.data.TicketmasterEvent
 import org.example.anye.ui.components.AuthStatusIndicator
+import org.example.anye.viewmodels.Action
 import org.koin.androidx.compose.koinViewModel
 
 
@@ -82,19 +91,63 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
     var showDeleteDialog by remember { mutableStateOf(false) }
     val isLoading by viewModel.isLoading.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     var city by remember {
         mutableStateOf("")
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AccentColor)
-    ) {
+    LaunchedEffect(Unit) {
+        viewModel.action.collect { action ->
+            when (action) {
+                is Action.Success -> {
+                    snackbarHostState.showSnackbar(action.message)
+                }
+                is Action.Error -> {
+                    snackbarHostState.showSnackbar(action.message)
+                }
+                Action.Initial -> Unit
+            }
+        }
+    }
+
+    // Scaffold als Hauptcontainer verwenden
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                // Hole Farbe aus den SnackbarData-Extras
+                val background = when (data.visuals.message) {
+                    "Events erfolgreich geladen" -> Color(0xFF4CAF50) // Grün
+                    "Zu Favoriten hinzugefügt" -> Color(0xFF4CAF50) // Grün
+                    "Fehler beim Laden der Events" -> Color(0xFFF44336) // Rot
+                    "Fehler beim Löschen!" -> Color(0xFFF44336) // Rot
+                    "Fehler beim Favorisieren!" -> Color(0xFFF44336) // Rot
+                    else -> Color(0xFF2196F3) // Blau (Standard)
+                }
+                Snackbar(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    containerColor = background,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = data.visuals.message,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+        },
+        containerColor = AccentColor,
+    ) { paddingValues ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(WindowInsets.systemBars.asPaddingValues()) // Eine Function um den Content unter der Status Bar anzuzeigen.
+                .padding(paddingValues)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
@@ -186,24 +239,45 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Alle Events löschen?") },
-            text = { Text("Möchtest du wirklich alle Events aus der Liste löschen? Favoriten bleiben erhalten.") },
+            title = {
+                Text(
+                    "Alle Events löschen?",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+                    },
+            text = {
+                Text(
+                    "Möchtest du wirklich alle Events aus der Liste löschen? Favoriten bleiben erhalten.",
+                    color = Color.White
+                )
+                   },
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.deleteAllEvents()
                         showDeleteDialog = false
+                        viewModel.deleteAllEvents()
                         Log.d(TAG, "All events deleted")
-                    }
+                    },
+                    colors = buttonColors(
+                        containerColor = Color.Red
+                    )
                 ) {
-                    Text("Löschen")
+                    Text("Ja, löschen", color = Color.White)
                 }
             },
             dismissButton = {
-                Button(onClick = { showDeleteDialog = false }) {
-                    Text("Abbrechen")
+                Button(
+                    onClick = { showDeleteDialog = false },
+                    colors = buttonColors(
+                        containerColor = Color.Green
+                    )
+                ) {
+                    Text("Abbrechen", color = Color.White)
                 }
-            }
+            },
+            containerColor = Color(0xFF1E1E1E),
+            shape = RoundedCornerShape(16.dp)
         )
     }
 }
