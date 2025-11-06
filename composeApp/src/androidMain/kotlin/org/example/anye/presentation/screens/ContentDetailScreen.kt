@@ -45,10 +45,20 @@ import org.example.anye.ui.menu.AnyeBottomBar
 import coil.compose.AsyncImage
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
 import org.example.anye.ui.components.AuthStatusIndicator
+import org.example.anye.viewmodels.ContentDetailAction
+import org.example.anye.viewmodels.FavoriteAction
 import org.example.anye.viewmodels.HomeViewModel
 import org.koin.androidx.compose.koinViewModel
 import java.net.URLEncoder
@@ -60,12 +70,26 @@ fun ContentDetailScreen(navController: NavController, id: String){
     Log.d(TAG, "Screen initialized with id: $id")
 
     val context = LocalContext.current
-
+    val snackbarHostState = remember { SnackbarHostState() }
     val viewModel: ContentDetailViewModel = koinViewModel()
 
     LaunchedEffect(id) {
         Log.d(TAG, "Loading festival for id: $id")
         viewModel.loadEvent(id)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.action.collect { action ->
+            when (action) {
+                is ContentDetailAction.Success -> {
+                    snackbarHostState.showSnackbar(action.message)
+                }
+                is ContentDetailAction.Error -> {
+                    snackbarHostState.showSnackbar(action.message)
+                }
+                ContentDetailAction.Initial -> Unit
+            }
+        }
     }
 
     val event by viewModel.event.collectAsState()
@@ -107,15 +131,41 @@ fun ContentDetailScreen(navController: NavController, id: String){
 
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AccentColor)
-    ) {
+    // Scaffold als Hauptcontainer verwenden
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                // Hole Farbe aus den SnackbarData-Extras
+                val background = when (data.visuals.message) {
+                    "Zu Favoriten hinzugefügt" -> Color(0xFF4CAF50)
+                    "Fehler beim laden von Event!" -> Color(0xFFF44336) // Rot
+                    "Fehler!" -> Color(0xFFF44336) // Rot
+                    else -> Color(0xFF2196F3) // Blau (Standard)
+                }
+                Snackbar(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    containerColor = background,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = data.visuals.message,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+        },
+        containerColor = AccentColor,
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(WindowInsets.systemBars.asPaddingValues())
+                .padding(paddingValues)
                 .background(brush = Brush.verticalGradient(colors = listOf(
                     TopLightBlue,
                     BottomDarkBlue
