@@ -40,10 +40,15 @@ class ContentDetailViewModel(
                 // Lade das Event direkt über die API-ID
                 val eventData = getEventByIdUseCase.getEventByIdFlow(id).firstOrNull()
                 _event.value = eventData
+                // FAVORITENSTATUS ABFRAGEN
+                val favoriteStatus = getFavoriteUseCase.isFavorite(id)
+                _isFavorite.value = favoriteStatus
+
                 _action.emit(ContentDetailAction.Success("Detailansicht von ${eventData?.name.toString()}"))
             } catch (e: Exception) {
                 logMessage("ContentDetailViewModel: Error loading event: ${e.message}")
                 _event.value = null
+                _isFavorite.value = false
                 _action.emit(ContentDetailAction.Success("Fehler beim laden von Event!"))
             }
         }
