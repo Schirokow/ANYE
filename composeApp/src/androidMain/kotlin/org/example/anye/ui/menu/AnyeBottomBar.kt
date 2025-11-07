@@ -120,7 +120,7 @@ fun AnyeBottomBar(navController: NavController)
                 IconButton(onClick = {
                     navController.navigate("FavoriteScreen"){
                         launchSingleTop = true
-                        restoreState = true
+                        restoreState = false
                         popUpTo(navController.graph.startDestinationId) {
                             saveState = true
                         }
