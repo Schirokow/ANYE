@@ -123,6 +123,10 @@ fun OpenStreetMapDisplay(
     var mapView by remember { mutableStateOf<MapView?>(null) }
     var zoomLevel by remember { mutableStateOf(15.0) }
 
+    // Wir speichern die Marker selbst, anstatt sie ständig neu zu erstellen.
+    var eventMarker by remember { mutableStateOf<Marker?>(null) }
+    var userMarker by remember { mutableStateOf<Marker?>(null) }
+
     // 4. Erstelle einen GeoPoint für das Event, falls vorhanden
     val eventGeoPoint = remember(eventLat, eventLng) {
         if (eventLat != null && eventLng != null) {
@@ -154,11 +158,53 @@ fun OpenStreetMapDisplay(
     }
 
     // 6. Zentriere die Karte auf das Event (nur einmal, wenn die MapView bereit ist)
+//    LaunchedEffect(mapView, eventGeoPoint) {
+//        if (mapView != null && eventGeoPoint != null) {
+//            mapView?.controller?.animateTo(eventGeoPoint)
+//            mapView?.controller?.setZoom(16.0) // Setze einen guten Zoom-Level für ein Event
+//        }
+//    }
+
+    // Dieser Effekt läuft, sobald die MapView bereit ist, und erstellt die Marker.
     LaunchedEffect(mapView, eventGeoPoint) {
-        if (mapView != null && eventGeoPoint != null) {
-            mapView?.controller?.animateTo(eventGeoPoint)
-            mapView?.controller?.setZoom(16.0) // Setze einen guten Zoom-Level für ein Event
+        val localMapView = mapView ?: return@LaunchedEffect
+
+        // 1. Event-Marker erstellen (falls vorhanden)
+        eventGeoPoint?.let { eventPoint ->
+            val marker = Marker(localMapView).apply {
+                position = eventPoint
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                title = eventName ?: "Event-Standort"
+                snippet = "Entfernung wird berechnet..." // Initialer Text
+                val icon = ContextCompat.getDrawable(context, R.drawable.ic_event_pin)
+                icon?.let { setIcon(it) }
+
+                // Click-Listener, damit der User es manuell öffnen/schließen kann
+                setOnMarkerClickListener { m, _ ->
+                    if (m.isInfoWindowShown) {
+                        m.closeInfoWindow()
+                    } else {
+                        m.showInfoWindow()
+                    }
+                    true // Event konsumiert
+                }
+            }
+            localMapView.overlays.add(marker)
+            marker.showInfoWindow() // Initial einmal anzeigen
+            eventMarker = marker // Im State speichern
         }
+
+        // 2. User-Marker erstellen (unsichtbar, bis Standort da ist)
+        val marker = Marker(localMapView).apply {
+            position = GeoPoint(0.0, 0.0) // Platzhalter
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            title = "Aktuelle Position"
+            setEnabled(false) // Verstecken, bis wir echten Standort haben
+        }
+        localMapView.overlays.add(marker)
+        userMarker = marker // Im State speichern
+
+        localMapView.invalidate()
     }
 
 
@@ -168,6 +214,53 @@ fun OpenStreetMapDisplay(
 
     var lastLocation by remember { mutableStateOf<GeoPoint?>(null) }
 
+    // Dieser Effekt läuft, JEDES MAL wenn 'lastLocation' sich ändert.
+    // Er aktualisiert die bestehenden Marker.
+    LaunchedEffect(lastLocation, eventMarker, userMarker) {
+        val localMapView = mapView ?: return@LaunchedEffect
+
+        // 1. User-Marker Position aktualisieren
+        userMarker?.let { marker ->
+            lastLocation?.let {
+                marker.position = it // Position aktualisieren
+                marker.setEnabled(true) // Sichtbar machen
+
+                // Zum User zoomen, WENN kein Event da ist
+                if (eventGeoPoint == null && !localMapView.isAnimating) {
+                    localMapView.controller.animateTo(it)
+                }
+            }
+        }
+
+        // 2. Event-Marker Snippet (Entfernung) aktualisieren
+        eventMarker?.let { marker ->
+            val distanceString = if (lastLocation != null && eventGeoPoint != null) {
+                val distanceInMeters = eventGeoPoint.distanceToAsDouble(lastLocation!!)
+                "Entfernung: ${formatDistance(distanceInMeters.toFloat())}"
+            } else if (locationPermissionState.status.isGranted) {
+                "Entfernung wird berechnet..."
+            } else {
+                "Standortberechtigung fehlt"
+            }
+
+            // Den Text im Marker-Objekt aktualisieren
+            marker.snippet = distanceString
+
+            // --- DAS IST DIE KERNLOGIK DEINER ANFRAGE ---
+            // Wenn das Fenster gerade vom User offen gehalten wird,
+            // erzwinge eine Aktualisierung, indem du es schließt und neu öffnest.
+            if (marker.isInfoWindowShown) {
+                marker.closeInfoWindow()
+                marker.showInfoWindow()
+            }
+            // Wenn das Fenster geschlossen ist (isInfoWindowShown == false),
+            // passiert hier nichts. Das Snippet wird "leise" im Hintergrund
+            // aktualisiert und ist korrekt, wenn der User es das nächste Mal öffnet.
+        }
+
+        localMapView.invalidate() // Karte neu zeichnen, um Änderungen anzuzeigen
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         // Kartenansicht
         mapView?.let { mv ->
@@ -175,75 +268,11 @@ fun OpenStreetMapDisplay(
                 factory = { mv },
                 modifier = Modifier.fillMaxSize(),
                 update = { view ->
-                    // 7. Update-Logik anpassen
-                    view.controller.setZoom(zoomLevel) // Zoom-Level beibehalten
-                    view.overlays.removeIf { true } // Alle Marker löschen
-
-                    // 7a. Event-Marker hinzufügen (falls vorhanden)
-                    eventGeoPoint?.let { eventPoint ->
-                        // --- DISTANZBERECHNUNG ---
-                        var distanceString: String? = null
-                        if (locationPermissionState.status.isGranted && lastLocation != null) {
-                            // osmdroid GeoPoint.distanceToAsDouble() gibt Meter zurück
-                            val distanceInMeters = eventPoint.distanceToAsDouble(lastLocation!!)
-                            distanceString = formatDistance(distanceInMeters.toFloat())
-                        }
-
-
-                        val eventMarker = Marker(view).apply {
-                            position = eventPoint
-                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-
-                            // 5. Titel und Icon setzen!
-                            title = eventName ?: "Event-Standort"
-
-                            // --- SNIPPET (TEXT UNTER TITEL) SETZEN ---
-                            snippet = when {
-                                distanceString != null -> "Entfernung: $distanceString"
-                                locationPermissionState.status.isGranted -> "Entfernung wird berechnet..."
-                                else -> "Standortberechtigung fehlt"
-                            }
-
-                            // 6. Lade das Drawable
-                            val icon = ContextCompat.getDrawable(context, R.drawable.ic_event_pin)
-                            icon?.let { setIcon(it) }
-
-                            // Info-Fenster MUSS (erneut) angezeigt werden, um das Update zu sehen
-                            if (isInfoWindowShown) {
-                                // Wenn es schon offen war, schließe und öffne es neu,
-                                // um den "snippet"-Text zu aktualisieren.
-                                closeInfoWindow()
-                                showInfoWindow()
-                            } else {
-                                // Ansonsten einfach beim ersten Mal anzeigen.
-                                showInfoWindow()
-                            }
-
-                            // 7. Optional: Info-Fenster sofort anzeigen
-//                            showInfoWindow()
-                        }
-                        view.overlays.add(eventMarker)
+                    // Die 'update'-Logik wird nur noch für Dinge wie Zoom
+                    // ODER für nicht-state-basierte Änderungen benötigt.
+                    if (view.zoomLevelDouble != zoomLevel) {
+                        view.controller.setZoom(zoomLevel)
                     }
-
-
-                    // 7b. User-Positions-Marker hinzufügen (falls Berechtigung erteilt)
-                    if (locationPermissionState.status.isGranted) {
-                        lastLocation?.let {
-                            Marker(view).apply {
-                                position = it
-                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                                title = "Aktuelle Position"
-                            }.also { marker ->
-                                view.overlays.add(marker)
-                            }
-
-                            // 7c. Nur zur User-Position animieren, WENN KEIN Event angezeigt wird
-                            if (eventGeoPoint == null && !view.isAnimating) {
-                                view.controller.animateTo(it)
-                            }
-                        }
-                    }
-                    view.invalidate() // Wichtig, um die Overlays neu zu zeichnen
                 }
             )
         }
