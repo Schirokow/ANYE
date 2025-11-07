@@ -11,7 +11,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -54,6 +56,13 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.rounded.ArrowDownward
+import androidx.compose.material.icons.rounded.ArrowUpward
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.rounded.LocationOn
+import androidx.compose.material.icons.rounded.Person
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -281,7 +290,7 @@ fun OpenStreetMapDisplay(
         Column(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .padding(16.dp),
+                .padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Button(
@@ -290,11 +299,14 @@ fun OpenStreetMapDisplay(
                     mapView?.controller?.setZoom(zoomLevel)
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF29719E),  // EVOO Blauton Hintergrundfarbe
+                    containerColor = Color(0xFF29719E).copy(alpha = 0.65f),  // Blauton Hintergrundfarbe
                     contentColor = Color.White      // Text-/Symbolfarbe
                 )
             ) {
-                Text("+")
+                Icon(
+                    imageVector = Icons.Rounded.ArrowUpward,
+                    contentDescription = "Plus"
+                )
             }
             Button(
                 onClick = {
@@ -302,13 +314,65 @@ fun OpenStreetMapDisplay(
                     mapView?.controller?.setZoom(zoomLevel)
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF29719E),  // EVOO Blauton Hintergrundfarbe
+                    containerColor = Color(0xFF29719E).copy(alpha = 0.65f),  // Blauton Hintergrundfarbe
                     contentColor = Color.White      // Text-/Symbolfarbe
                 )
             ) {
-                Text("-")
+                Icon(
+                    imageVector = Icons.Rounded.ArrowDownward,
+                    contentDescription = "Minus"
+                )
+            }
+
+            Spacer(modifier = Modifier.height(250.dp))
+
+            // --- Event-Zentrierungs-Button ---
+            Button(
+                onClick = {
+                    eventGeoPoint?.let { point ->
+                        mapView?.controller?.animateTo(point)
+                        // Setze auch den Zoom für eine gute Ansicht
+                        mapView?.controller?.setZoom(16.0)
+                        zoomLevel = 16.0 // Zoom-Level im State aktualisieren
+                    }
+                },
+                // Deaktiviere den Button, wenn kein Event-Punkt vorhanden ist
+                enabled = eventGeoPoint != null,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF29719E).copy(alpha = 0.65f),
+                    contentColor = Color.White
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.LocationOn,
+                    contentDescription = "Event zentrieren"
+                )
+            }
+
+            // --- User-Zentrierungs-Button ---
+            Button(
+                onClick = {
+                    lastLocation?.let { point ->
+                        mapView?.controller?.animateTo(point)
+                        // Setze auch den Zoom für eine gute Ansicht
+                        mapView?.controller?.setZoom(16.0)
+                        zoomLevel = 16.0 // Zoom-Level im State aktualisieren
+                    }
+                },
+                // Deaktiviere den Button, bis der User-Standort gefunden wurde
+                enabled = lastLocation != null,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF29719E).copy(alpha = 0.65f),
+                    contentColor = Color.White
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Person,
+                    contentDescription = "Auf mich zentrieren"
+                )
             }
         }
+
     }
 
     if (locationPermissionState.status.isGranted) {
