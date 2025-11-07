@@ -3,6 +3,7 @@ package org.example.anye.presentation.screens
 // Für Bildanzeige
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.Send
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
@@ -85,6 +88,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
     val isLoading by viewModel.isLoading.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val eventsData by viewModel.eventsData.collectAsState()
     var city by remember {
         mutableStateOf("")
     }
@@ -95,9 +99,11 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
                 is Action.Success -> {
                     snackbarHostState.showSnackbar(action.message)
                 }
+
                 is Action.Error -> {
                     snackbarHostState.showSnackbar(action.message)
                 }
+
                 Action.Initial -> Unit
             }
         }
@@ -162,44 +168,70 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
                     .fillMaxWidth()
                     .padding(top = 25.dp)
             ) {
-                OutlinedTextField(
-                    value = city,
-                    singleLine = true,
-                    placeholder = { Text("Stadt eingeben", color = Color.White) },
-                    textStyle = TextStyle(color = Color.White),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.Yellow,
-                        unfocusedBorderColor = Color.White
-                    ),
-                    onValueChange = { city = it },
-                    modifier = Modifier.padding(start = 65.dp)
-                )
                 Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ClickButton(
-                        text = "Laden",
-                        onClick = {
-                            if (city.isNotBlank()) {
+                    OutlinedTextField(
+                        value = city,
+                        singleLine = true,
+                        placeholder = { Text("Stadt eingeben", color = Color.White) },
+                        textStyle = TextStyle(color = Color.White),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Yellow,
+                            unfocusedBorderColor = Color.White
+                        ),
+                        onValueChange = { city = it },
+                        modifier = Modifier.padding(start = 65.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Icon(
+                        imageVector = Icons.Rounded.Send,
+                        contentDescription = "Add",
+                        tint = Color.Blue,
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clickable {
+                                if (city.isNotBlank()) {
 //                            viewModel.loadAllFestivals()
-                                viewModel.loadAllEvents(city)
-                                city = ""
+                                    viewModel.loadAllEvents(city)
+                                    city = ""
+                                }
                             }
-
-                        },
-                        modifier = Modifier.width(150.dp)
                     )
+                }
 
-                    ClickButton(
-                        text = "Löschen",
-                        onClick = { showDeleteDialog = true },
-                        modifier = Modifier.width(150.dp)
-                    )
+                AnimatedVisibility(
+                    visible = eventsData.isNotEmpty() && !isLoading
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ClickButton(
+                            text = "Auf der Karte",
+                            onClick = {
+//                            if (city.isNotBlank()) {
+////                            viewModel.loadAllFestivals()
+//                                viewModel.loadAllEvents(city)
+//                                city = ""
+//                            }
 
+                            },
+                            modifier = Modifier.width(150.dp)
+                        )
+
+                        ClickButton(
+                            text = "Löschen",
+                            onClick = { showDeleteDialog = true },
+                            modifier = Modifier.width(150.dp)
+                        )
+
+                    }
                 }
 
             }
@@ -238,13 +270,13 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
-                    },
+            },
             text = {
                 Text(
                     "Möchtest du wirklich alle Events aus der Liste löschen? Favoriten bleiben erhalten.",
                     color = Color.White
                 )
-                   },
+            },
             confirmButton = {
                 Button(
                     onClick = {
