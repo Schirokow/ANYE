@@ -317,6 +317,12 @@ fun OpenStreetMapDisplay(
         }
 
         localMapView.invalidate()
+
+        if (mapEvents.size == 1) {
+            val eventPoint = mapEvents.first().toGeoPoint()
+            localMapView.controller.setZoom(16.0)
+            localMapView.controller.animateTo(eventPoint)
+        }
     }
 
     val locationPermissionState = rememberPermissionState(
