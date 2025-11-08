@@ -70,6 +70,8 @@ import java.text.DecimalFormat
 import org.example.anye.data.TicketmasterEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.osmdroid.views.overlay.infowindow.InfoWindow
+import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow
 
 
 // Eine Klasse, um Lat/Lng/Name zu bündeln
@@ -151,40 +153,16 @@ fun OpenStreetMapDisplay(
     var mapView by remember { mutableStateOf<MapView?>(null) }
     var zoomLevel by remember { mutableStateOf(15.0) }
 
-    // --- Event-Daten vorbereiten ---
-//    val mapEvents = remember(singleEventLat, singleEventLng, singleEventName) {
-//        if (singleEventLat != null && singleEventLng != null && singleEventName != null) {
-//            // 1. SINGLE-EVENT-MODUS (von ContentDetailScreen)
-//            Log.d("OpenStreetMapDisplay", "Modus: Einzel-Event")
-//            listOf(MapEventInfo(singleEventLat, singleEventLng, singleEventName))
-//        } else {
-//            // 2. MULTI-EVENT-MODUS (von HomeScreen)
-//            Log.d("OpenStreetMapDisplay", "Modus: Multi-Event")
-//            val eventsFromHolder = MapDataHolder.events
-//            // WICHTIG: Holder leeren, damit die Daten nicht alt angezeigt werden
-//            MapDataHolder.events = emptyList()
-//
-//            eventsFromHolder.mapNotNull { event ->
-//                val venue = event._embedded?.venues?.firstOrNull()
-//                val lat = venue?.location?.latitude?.toDoubleOrNull()
-//                val lng = venue?.location?.longitude?.toDoubleOrNull()
-//
-//                if (lat != null && lng != null) {
-//                    MapEventInfo(lat, lng, event.name)
-//                } else {
-//                    null // Events ohne Ort überspringen
-//                }
-//            }
-//        }
-//    }
 
     // Es startet leer und wird vom LaunchedEffect befüllt.
     var mapEvents by remember { mutableStateOf<List<MapEventInfo>>(emptyList()) }
 
-
-    // --- Marker-States ---
-    var eventMarkers by remember { mutableStateOf<List<Marker>>(emptyList()) }
+    // --- State für Marker UND ihre zugehörigen InfoWindows ---
+    // Wir müssen jedes Fenster manuell speichern, um es zu verwalten.
+    var markerWindowMap by remember { mutableStateOf<Map<Marker, InfoWindow>>(emptyMap()) }
     var userMarker by remember { mutableStateOf<Marker?>(null) }
+    var userInfoWindow by remember { mutableStateOf<InfoWindow?>(null) } // Separates Fenster für User
+
 
     // --- 2: Datenverarbeitung in einen LaunchedEffect verschieben ---
     LaunchedEffect(singleEventLat, singleEventLng, singleEventName) {
@@ -250,24 +228,22 @@ fun OpenStreetMapDisplay(
         }
     }
 
-    // 6. Zentriere die Karte auf das Event (nur einmal, wenn die MapView bereit ist)
-//    LaunchedEffect(mapView, eventGeoPoint) {
-//        if (mapView != null && eventGeoPoint != null) {
-//            mapView?.controller?.animateTo(eventGeoPoint)
-//            mapView?.controller?.setZoom(16.0) // Setze einen guten Zoom-Level für ein Event
-//        }
-//    }
-
     // Dieser Effekt läuft, sobald die MapView bereit ist, und erstellt die Marker.
     LaunchedEffect(mapView, mapEvents) {
         val localMapView = mapView ?: return@LaunchedEffect
 
-        // 1. Alte Event-Marker von der Karte entfernen
-        eventMarkers.forEach { it.remove(localMapView) }
+        // 1. Alle alten Marker und InfoWindows restlos entfernen
+        markerWindowMap.values.forEach { it.close() } // Alle Fenster schließen
+        localMapView.overlays.removeAll(markerWindowMap.keys.toSet()) // Alle Marker entfernen
 
-        // 2. NEUE Event-Marker erstellen
-        val newMarkers = mapEvents.map { mapEvent ->
-            Marker(localMapView).apply {
+        // 2. NEUE Marker UND InfoWindows erstellen
+        val newMarkerWindowMap = mutableMapOf<Marker, InfoWindow>()
+
+        mapEvents.forEach { mapEvent ->
+            // Das Layout für die Blase aus der osmdroid-Bibliothek holen
+            val infoWindow = MarkerInfoWindow(org.osmdroid.library.R.layout.bonuspack_bubble, localMapView)
+
+            val marker = Marker(localMapView).apply {
                 position = mapEvent.toGeoPoint()
                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                 title = mapEvent.name
@@ -275,39 +251,54 @@ fun OpenStreetMapDisplay(
                 val icon = ContextCompat.getDrawable(context, R.drawable.ic_event_pin)
                 icon?.let { setIcon(it) }
 
+                // --- DAS IST DIE KERNLOGIK ---
+                // Wir weisen dem Marker sein EIGENES InfoWindow-Objekt zu.
+                setInfoWindow(infoWindow)
+
+                // Wir überschreiben den Klick-Listener, um die Standard-Logik
+                // (die alle anderen Fenster schließt) zu umgehen.
                 setOnMarkerClickListener { m, _ ->
-                    if (m.isInfoWindowShown) m.closeInfoWindow() else m.showInfoWindow()
-                    true
+                    if (m.isInfoWindowShown) {
+                        m.closeInfoWindow() // Schließe nur dieses Fenster
+                    } else {
+                        m.showInfoWindow() // Öffne nur dieses Fenster
+                    }
+                    true // Wichtig: Event als "behandelt" markieren
                 }
             }
-        }
-        localMapView.overlays.addAll(newMarkers)
 
-        // Zeige Info-Fenster, WENN es nur ein Event ist
-        if (newMarkers.size == 1) {
-            newMarkers.first().showInfoWindow()
-            // Zentriere auf dieses eine Event
-            localMapView.controller.animateTo(newMarkers.first().position)
-            localMapView.controller.setZoom(16.0)
+            newMarkerWindowMap[marker] = infoWindow
+            localMapView.overlays.add(marker) // Marker zur Karte hinzufügen
+
+            // --- DEIN ZIEL: Alle Event-Fenster standardmäßig öffnen ---
+            marker.showInfoWindow()
         }
 
-        eventMarkers = newMarkers // Neue Marker im State speichern
+        markerWindowMap = newMarkerWindowMap // Neuen State speichern
 
-        // 3. User-Marker (nur einmal erstellen)
+        // 3. User-Marker (erstellen, falls nicht vorhanden)
         if (userMarker == null) {
-            userMarker = Marker(localMapView).apply {
+            val uMarker = Marker(localMapView).apply {
                 position = GeoPoint(0.0, 0.0)
-                title = "Aktuelle Position"
+                title = ""
                 setEnabled(false)
             }
-            localMapView.overlays.add(userMarker)
+            // --- NEU: User-Marker bekommt auch sein EIGENES InfoWindow ---
+            val uInfoWindow = MarkerInfoWindow(org.osmdroid.library.R.layout.bonuspack_bubble, localMapView)
+            uMarker.setInfoWindow(uInfoWindow)
+            uMarker.setOnMarkerClickListener { m, _ ->
+                if (m.isInfoWindowShown) m.closeInfoWindow() else m.showInfoWindow()
+                true
+            }
+
+            userMarker = uMarker
+            userInfoWindow = uInfoWindow
+            localMapView.overlays.add(uMarker)
         }
 
-        // --- Auto-Zoom für alle Marker ---
+        // --- (Auto-Zoom bleibt gleich) ---
         if (mapEvents.size > 1) {
-            // Erstelle eine BoundingBox, die alle Punkte enthält
             val boundingBox = BoundingBox.fromGeoPoints(mapEvents.map { it.toGeoPoint() })
-            // Zoome auf diese Box mit 100 Pixeln Rand
             localMapView.post {
                 localMapView.zoomToBoundingBox(boundingBox, true, 100)
             }
@@ -324,24 +315,28 @@ fun OpenStreetMapDisplay(
 
     // Dieser Effekt läuft, JEDES MAL wenn 'lastLocation' sich ändert.
     // Er aktualisiert die bestehenden Marker.
-    LaunchedEffect(lastLocation, eventMarkers, userMarker) {
+    LaunchedEffect(lastLocation, markerWindowMap, userMarker) {
         val localMapView = mapView ?: return@LaunchedEffect
 
         // 1. User-Marker Position aktualisieren
         userMarker?.let { marker ->
             lastLocation?.let {
-                marker.position = it // Position aktualisieren
-                marker.setEnabled(true) // Sichtbar machen
+                if (!marker.isEnabled) { // Nur beim ersten Mal
+                    // --- User-Fenster öffnen, sobald Position da ist ---
+                    marker.showInfoWindow()
+                }
+                marker.position = it
+                marker.setEnabled(true)
+                marker.snippet = "Du bist hier" // Snippet-Text für User
 
-                // Nur zum User zoomen, wenn KEINE Events geladen sind
                 if (mapEvents.isEmpty() && !localMapView.isAnimating) {
                     localMapView.controller.animateTo(it)
                 }
             }
         }
 
-        // 2. Alle Event-Marker Snippet (Entfernung) aktualisieren
-        eventMarkers.forEach { marker ->
+        // 2. Alle Event-Marker Snippets (Entfernung) aktualisieren
+        markerWindowMap.forEach { (marker, infoWindow) ->
             val distanceString = if (lastLocation != null) {
                 val distanceInMeters = marker.position.distanceToAsDouble(lastLocation!!)
                 "Entfernung: ${formatDistance(distanceInMeters.toFloat())}"
@@ -351,19 +346,13 @@ fun OpenStreetMapDisplay(
                 "Standortberechtigung fehlt"
             }
 
-            // Den Text im Marker-Objekt aktualisieren
             marker.snippet = distanceString
 
-            // --- DAS IST DIE KERNLOGIK DEINER ANFRAGE ---
-            // Wenn das Fenster gerade vom User offen gehalten wird,
-            // erzwinge eine Aktualisierung, indem du es schließt und neu öffnest.
+            // Live-Update Logik (wirkt jetzt pro Fenster)
             if (marker.isInfoWindowShown) {
                 marker.closeInfoWindow()
                 marker.showInfoWindow()
             }
-            // Wenn das Fenster geschlossen ist (isInfoWindowShown == false),
-            // passiert hier nichts. Das Snippet wird "leise" im Hintergrund
-            // aktualisiert und ist korrekt, wenn der User es das nächste Mal öffnet.
         }
 
         localMapView.invalidate() // Karte neu zeichnen, um Änderungen anzuzeigen
