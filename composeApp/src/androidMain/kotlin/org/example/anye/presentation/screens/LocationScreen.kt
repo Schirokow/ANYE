@@ -70,6 +70,7 @@ import java.text.DecimalFormat
 import org.example.anye.data.TicketmasterEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.example.anye.presentation.map.CustomMarkerInfoWindow
 import org.osmdroid.views.overlay.infowindow.InfoWindow
 import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow
 
@@ -197,7 +198,10 @@ fun OpenStreetMapDisplay(
 
                 // --- Update des States (zurück auf dem Main Thread) ---
                 mapEvents = processedEvents
-                Log.d("OpenStreetMapDisplay", "Multi-Event Verarbeitung fertig: ${processedEvents.size} Events.")
+                Log.d(
+                    "OpenStreetMapDisplay",
+                    "Multi-Event Verarbeitung fertig: ${processedEvents.size} Events."
+                )
             }
         }
     }
@@ -241,7 +245,8 @@ fun OpenStreetMapDisplay(
 
         mapEvents.forEach { mapEvent ->
             // Das Layout für die Blase aus der osmdroid-Bibliothek holen
-            val infoWindow = MarkerInfoWindow(org.osmdroid.library.R.layout.bonuspack_bubble, localMapView)
+//            val infoWindow = MarkerInfoWindow(org.osmdroid.library.R.layout.bonuspack_bubble, localMapView)
+            val infoWindow = CustomMarkerInfoWindow(localMapView)
 
             val marker = Marker(localMapView).apply {
                 position = mapEvent.toGeoPoint()
@@ -258,12 +263,18 @@ fun OpenStreetMapDisplay(
                 // Wir überschreiben den Klick-Listener, um die Standard-Logik
                 // (die alle anderen Fenster schließt) zu umgehen.
                 setOnMarkerClickListener { m, _ ->
+                    val tag = (m.relatedObject as? MutableMap<String, Any?>) ?: mutableMapOf()
+
                     if (m.isInfoWindowShown) {
-                        m.closeInfoWindow() // Schließe nur dieses Fenster
+                        tag["manuallyClosed"] = true
+                        m.closeInfoWindow()
                     } else {
-                        m.showInfoWindow() // Öffne nur dieses Fenster
+                        tag["manuallyClosed"] = false
+                        m.showInfoWindow()
                     }
-                    true // Wichtig: Event als "behandelt" markieren
+
+                    m.relatedObject = tag
+                    true
                 }
             }
 
@@ -284,7 +295,8 @@ fun OpenStreetMapDisplay(
                 setEnabled(false)
             }
             // --- NEU: User-Marker bekommt auch sein EIGENES InfoWindow ---
-            val uInfoWindow = MarkerInfoWindow(org.osmdroid.library.R.layout.bonuspack_bubble, localMapView)
+//            val uInfoWindow = MarkerInfoWindow(org.osmdroid.library.R.layout.bonuspack_bubble, localMapView)
+            val uInfoWindow = CustomMarkerInfoWindow(localMapView)
             uMarker.setInfoWindow(uInfoWindow)
             uMarker.setOnMarkerClickListener { m, _ ->
                 if (m.isInfoWindowShown) m.closeInfoWindow() else m.showInfoWindow()
@@ -318,16 +330,15 @@ fun OpenStreetMapDisplay(
     LaunchedEffect(lastLocation, markerWindowMap, userMarker) {
         val localMapView = mapView ?: return@LaunchedEffect
 
-        // 1. User-Marker Position aktualisieren
+        // 1️⃣ User-Marker Position aktualisieren
         userMarker?.let { marker ->
             lastLocation?.let {
-                if (!marker.isEnabled) { // Nur beim ersten Mal
-                    // --- User-Fenster öffnen, sobald Position da ist ---
+                if (!marker.isEnabled) {
                     marker.showInfoWindow()
                 }
                 marker.position = it
                 marker.setEnabled(true)
-                marker.snippet = "Du bist hier" // Snippet-Text für User
+                marker.snippet = "Aktuelle Position"
 
                 if (mapEvents.isEmpty() && !localMapView.isAnimating) {
                     localMapView.controller.animateTo(it)
@@ -335,27 +346,46 @@ fun OpenStreetMapDisplay(
             }
         }
 
-        // 2. Alle Event-Marker Snippets (Entfernung) aktualisieren
+        // 2️⃣ Entfernung für Event-Marker aktualisieren
         markerWindowMap.forEach { (marker, infoWindow) ->
-            val distanceString = if (lastLocation != null) {
-                val distanceInMeters = marker.position.distanceToAsDouble(lastLocation!!)
-                "Entfernung: ${formatDistance(distanceInMeters.toFloat())}"
-            } else if (locationPermissionState.status.isGranted) {
-                "Entfernung wird berechnet..."
-            } else {
-                "Standortberechtigung fehlt"
+            val distanceString = when {
+                lastLocation != null -> {
+                    val distanceInMeters = marker.position.distanceToAsDouble(lastLocation!!)
+                    "Entfernung: ${formatDistance(distanceInMeters.toFloat())}"
+                }
+
+                locationPermissionState.status.isGranted -> "Entfernung wird berechnet..."
+                else -> "Standortberechtigung fehlt"
             }
 
             marker.snippet = distanceString
 
-            // Live-Update Logik (wirkt jetzt pro Fenster)
+            // Nur aktualisieren, wenn Fenster offen ist:
             if (marker.isInfoWindowShown) {
                 marker.closeInfoWindow()
                 marker.showInfoWindow()
             }
         }
 
-        localMapView.invalidate() // Karte neu zeichnen, um Änderungen anzuzeigen
+        // 3️⃣ Nur beim ersten erfolgreichen Standort-Fix ALLE öffnen
+        if (lastLocation != null) {
+            markerWindowMap.forEach { (marker, infoWindow) ->
+                // Nur öffnen, wenn:
+                // a) noch nie geöffnet wurde
+                // b) vom Nutzer nicht manuell geschlossen wurde
+                val tag = marker.relatedObject as? MutableMap<String, Any?> ?: mutableMapOf()
+                val manuallyClosed = tag["manuallyClosed"] as? Boolean ?: false
+                val alreadyOpened = tag["alreadyOpened"] as? Boolean ?: false
+
+                if (!manuallyClosed && !alreadyOpened) {
+                    marker.showInfoWindow()
+                    tag["alreadyOpened"] = true
+                    marker.relatedObject = tag
+                }
+            }
+        }
+
+        localMapView.invalidate()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -419,7 +449,8 @@ fun OpenStreetMapDisplay(
                 onClick = {
                     if (mapEvents.size > 1) {
                         // Bei vielen Events, zoome auf alle
-                        val boundingBox = BoundingBox.fromGeoPoints(mapEvents.map { it.toGeoPoint() })
+                        val boundingBox =
+                            BoundingBox.fromGeoPoints(mapEvents.map { it.toGeoPoint() })
                         mapView?.zoomToBoundingBox(boundingBox, true, 100)
                     } else if (mapEvents.size == 1) {
                         // Bei einem Event, zentriere darauf
@@ -537,7 +568,6 @@ private fun formatDistance(meters: Float): String {
         "${df.format(kilometers)} km"
     }
 }
-
 
 
 val eventOrange = Color(0xFFE64A19)
