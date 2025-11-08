@@ -67,6 +67,7 @@ import kotlinx.coroutines.launch
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
+import org.example.anye.data.MapDataHolder
 import org.example.anye.data.TicketmasterEvent
 import org.example.anye.ui.components.AuthStatusIndicator
 import org.example.anye.ui.components.buttons.ClickButton
@@ -215,11 +216,14 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
                         ClickButton(
                             text = "Auf der Karte",
                             onClick = {
-//                            if (city.isNotBlank()) {
-////                            viewModel.loadAllFestivals()
-//                                viewModel.loadAllEvents(city)
-//                                city = ""
-//                            }
+                                // 1. Speichere die aktuelle Event-Liste im Holder
+                                // (eventsData ist die Variable aus deinem HomeScreen-Scope)
+                                MapDataHolder.events = eventsData
+
+                                Log.d(TAG, "Navigiere zur Karte mit ${eventsData.size} Events.")
+
+                                // 2. Navigiere zum LocationScreen OHNE Parameter
+                                navController.navigate("LocationScreen")
 
                             },
                             modifier = Modifier.width(150.dp)

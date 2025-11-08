@@ -63,6 +63,23 @@ import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.Person
+import com.example.evoo.ui.theme.colorthemetype.BottomDarkBlue
+import org.example.anye.data.MapDataHolder // neuer Holder
+import org.osmdroid.util.BoundingBox // Für Auto-Zoom
+import java.text.DecimalFormat
+import org.example.anye.data.TicketmasterEvent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+
+// Eine Klasse, um Lat/Lng/Name zu bündeln
+private data class MapEventInfo(
+    val lat: Double,
+    val lng: Double,
+    val name: String
+) {
+    fun toGeoPoint(): GeoPoint = GeoPoint(lat, lng)
+}
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -89,10 +106,12 @@ fun LocationScreen(
         ) {
 
             // 2. Übergebe die Parameter an die Karten-Composable
+            // Die Logik, ob Multi-Event geladen wird,
+            // steckt jetzt in OpenStreetMapDisplay.
             OpenStreetMapDisplay(
-                eventLat = eventLat,
-                eventLng = eventLng,
-                eventName = eventName
+                singleEventLat = eventLat,
+                singleEventLng = eventLng,
+                singleEventName = eventName
             )
 
             // Auth-Status oben rechts
@@ -105,7 +124,7 @@ fun LocationScreen(
             Icon(
                 imageVector = Icons.Rounded.ArrowBack,
                 contentDescription = "Back",
-                tint = eventOrange,
+                tint = BottomDarkBlue,
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
                     .padding(4.dp)
@@ -124,25 +143,90 @@ fun LocationScreen(
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun OpenStreetMapDisplay(
-    eventLat: Double? = null,
-    eventLng: Double? = null,
-    eventName: String? = null
+    singleEventLat: Double? = null,
+    singleEventLng: Double? = null,
+    singleEventName: String? = null
 ) {
     val context = LocalContext.current
     var mapView by remember { mutableStateOf<MapView?>(null) }
     var zoomLevel by remember { mutableStateOf(15.0) }
 
-    // Wir speichern die Marker selbst, anstatt sie ständig neu zu erstellen.
-    var eventMarker by remember { mutableStateOf<Marker?>(null) }
+    // --- Event-Daten vorbereiten ---
+//    val mapEvents = remember(singleEventLat, singleEventLng, singleEventName) {
+//        if (singleEventLat != null && singleEventLng != null && singleEventName != null) {
+//            // 1. SINGLE-EVENT-MODUS (von ContentDetailScreen)
+//            Log.d("OpenStreetMapDisplay", "Modus: Einzel-Event")
+//            listOf(MapEventInfo(singleEventLat, singleEventLng, singleEventName))
+//        } else {
+//            // 2. MULTI-EVENT-MODUS (von HomeScreen)
+//            Log.d("OpenStreetMapDisplay", "Modus: Multi-Event")
+//            val eventsFromHolder = MapDataHolder.events
+//            // WICHTIG: Holder leeren, damit die Daten nicht alt angezeigt werden
+//            MapDataHolder.events = emptyList()
+//
+//            eventsFromHolder.mapNotNull { event ->
+//                val venue = event._embedded?.venues?.firstOrNull()
+//                val lat = venue?.location?.latitude?.toDoubleOrNull()
+//                val lng = venue?.location?.longitude?.toDoubleOrNull()
+//
+//                if (lat != null && lng != null) {
+//                    MapEventInfo(lat, lng, event.name)
+//                } else {
+//                    null // Events ohne Ort überspringen
+//                }
+//            }
+//        }
+//    }
+
+    // Es startet leer und wird vom LaunchedEffect befüllt.
+    var mapEvents by remember { mutableStateOf<List<MapEventInfo>>(emptyList()) }
+
+
+    // --- Marker-States ---
+    var eventMarkers by remember { mutableStateOf<List<Marker>>(emptyList()) }
     var userMarker by remember { mutableStateOf<Marker?>(null) }
 
-    // 4. Erstelle einen GeoPoint für das Event, falls vorhanden
-    val eventGeoPoint = remember(eventLat, eventLng) {
-        if (eventLat != null && eventLng != null) {
-            GeoPoint(eventLat, eventLng)
+    // --- 2: Datenverarbeitung in einen LaunchedEffect verschieben ---
+    LaunchedEffect(singleEventLat, singleEventLng, singleEventName) {
+        if (singleEventLat != null && singleEventLng != null && singleEventName != null) {
+            // 1. SINGLE-EVENT-MODUS (schnell, kein Hintergrund-Thread nötig)
+            Log.d("OpenStreetMapDisplay", "Modus: Einzel-Event")
+            mapEvents = listOf(MapEventInfo(singleEventLat, singleEventLng, singleEventName))
         } else {
-            null
+            // 2. MULTI-EVENT-MODUS (potenziell langsam)
+            Log.d("OpenStreetMapDisplay", "Modus: Multi-Event")
+            val eventsFromHolder = MapDataHolder.events
+            MapDataHolder.events = emptyList() // Holder leeren
+
+            if (eventsFromHolder.isNotEmpty()) {
+
+                // --- 3: Arbeit in einen HINTERGRUND-THREAD verlagern ---
+                val processedEvents = withContext(Dispatchers.Default) {
+                    // Diese teure Operation läuft jetzt im Hintergrund
+                    // und blockiert NICHT die UI.
+                    eventsFromHolder.mapNotNull { event ->
+                        val venue = event._embedded?.venues?.firstOrNull()
+                        val lat = venue?.location?.latitude?.toDoubleOrNull()
+                        val lng = venue?.location?.longitude?.toDoubleOrNull()
+
+                        if (lat != null && lng != null) {
+                            MapEventInfo(lat, lng, event.name)
+                        } else {
+                            null // Events ohne Ort überspringen
+                        }
+                    }
+                }
+
+                // --- Update des States (zurück auf dem Main Thread) ---
+                mapEvents = processedEvents
+                Log.d("OpenStreetMapDisplay", "Multi-Event Verarbeitung fertig: ${processedEvents.size} Events.")
+            }
         }
+    }
+
+    // Primärer Punkt zum Zentrieren (oder Berlin-Fallback)
+    val primaryGeoPoint = remember(mapEvents) {
+        mapEvents.firstOrNull()?.toGeoPoint() ?: GeoPoint(52.5200, 13.4050)
     }
 
     // OSMDroid Konfiguration
@@ -162,7 +246,7 @@ fun OpenStreetMapDisplay(
             // Wenn ein Event vorhanden ist, zentriere darauf.
             // Sonst zentriere auf einen Standardwert (z.B. Berlin),
             // der später vom User-Standort überschrieben wird.
-            controller.setCenter(eventGeoPoint ?: GeoPoint(52.5200, 13.4050))
+            controller.setCenter(GeoPoint(primaryGeoPoint))
         }
     }
 
@@ -175,57 +259,72 @@ fun OpenStreetMapDisplay(
 //    }
 
     // Dieser Effekt läuft, sobald die MapView bereit ist, und erstellt die Marker.
-    LaunchedEffect(mapView, eventGeoPoint) {
+    LaunchedEffect(mapView, mapEvents) {
         val localMapView = mapView ?: return@LaunchedEffect
 
-        // 1. Event-Marker erstellen (falls vorhanden)
-        eventGeoPoint?.let { eventPoint ->
-            val marker = Marker(localMapView).apply {
-                position = eventPoint
+        // 1. Alte Event-Marker von der Karte entfernen
+        eventMarkers.forEach { it.remove(localMapView) }
+
+        // 2. NEUE Event-Marker erstellen
+        val newMarkers = mapEvents.map { mapEvent ->
+            Marker(localMapView).apply {
+                position = mapEvent.toGeoPoint()
                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                title = eventName ?: "Event-Standort"
-                snippet = "Entfernung wird berechnet..." // Initialer Text
+                title = mapEvent.name
+                snippet = "Entfernung wird berechnet..."
                 val icon = ContextCompat.getDrawable(context, R.drawable.ic_event_pin)
                 icon?.let { setIcon(it) }
 
-                // Click-Listener, damit der User es manuell öffnen/schließen kann
                 setOnMarkerClickListener { m, _ ->
-                    if (m.isInfoWindowShown) {
-                        m.closeInfoWindow()
-                    } else {
-                        m.showInfoWindow()
-                    }
-                    true // Event konsumiert
+                    if (m.isInfoWindowShown) m.closeInfoWindow() else m.showInfoWindow()
+                    true
                 }
             }
-            localMapView.overlays.add(marker)
-            marker.showInfoWindow() // Initial einmal anzeigen
-            eventMarker = marker // Im State speichern
+        }
+        localMapView.overlays.addAll(newMarkers)
+
+        // Zeige Info-Fenster, WENN es nur ein Event ist
+        if (newMarkers.size == 1) {
+            newMarkers.first().showInfoWindow()
+            // Zentriere auf dieses eine Event
+            localMapView.controller.animateTo(newMarkers.first().position)
+            localMapView.controller.setZoom(16.0)
         }
 
-        // 2. User-Marker erstellen (unsichtbar, bis Standort da ist)
-        val marker = Marker(localMapView).apply {
-            position = GeoPoint(0.0, 0.0) // Platzhalter
-            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-            title = "Aktuelle Position"
-            setEnabled(false) // Verstecken, bis wir echten Standort haben
+        eventMarkers = newMarkers // Neue Marker im State speichern
+
+        // 3. User-Marker (nur einmal erstellen)
+        if (userMarker == null) {
+            userMarker = Marker(localMapView).apply {
+                position = GeoPoint(0.0, 0.0)
+                title = "Aktuelle Position"
+                setEnabled(false)
+            }
+            localMapView.overlays.add(userMarker)
         }
-        localMapView.overlays.add(marker)
-        userMarker = marker // Im State speichern
+
+        // --- Auto-Zoom für alle Marker ---
+        if (mapEvents.size > 1) {
+            // Erstelle eine BoundingBox, die alle Punkte enthält
+            val boundingBox = BoundingBox.fromGeoPoints(mapEvents.map { it.toGeoPoint() })
+            // Zoome auf diese Box mit 100 Pixeln Rand
+            localMapView.post {
+                localMapView.zoomToBoundingBox(boundingBox, true, 100)
+            }
+        }
 
         localMapView.invalidate()
     }
 
-
     val locationPermissionState = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
-
     var lastLocation by remember { mutableStateOf<GeoPoint?>(null) }
+
 
     // Dieser Effekt läuft, JEDES MAL wenn 'lastLocation' sich ändert.
     // Er aktualisiert die bestehenden Marker.
-    LaunchedEffect(lastLocation, eventMarker, userMarker) {
+    LaunchedEffect(lastLocation, eventMarkers, userMarker) {
         val localMapView = mapView ?: return@LaunchedEffect
 
         // 1. User-Marker Position aktualisieren
@@ -234,17 +333,17 @@ fun OpenStreetMapDisplay(
                 marker.position = it // Position aktualisieren
                 marker.setEnabled(true) // Sichtbar machen
 
-                // Zum User zoomen, WENN kein Event da ist
-                if (eventGeoPoint == null && !localMapView.isAnimating) {
+                // Nur zum User zoomen, wenn KEINE Events geladen sind
+                if (mapEvents.isEmpty() && !localMapView.isAnimating) {
                     localMapView.controller.animateTo(it)
                 }
             }
         }
 
-        // 2. Event-Marker Snippet (Entfernung) aktualisieren
-        eventMarker?.let { marker ->
-            val distanceString = if (lastLocation != null && eventGeoPoint != null) {
-                val distanceInMeters = eventGeoPoint.distanceToAsDouble(lastLocation!!)
+        // 2. Alle Event-Marker Snippet (Entfernung) aktualisieren
+        eventMarkers.forEach { marker ->
+            val distanceString = if (lastLocation != null) {
+                val distanceInMeters = marker.position.distanceToAsDouble(lastLocation!!)
                 "Entfernung: ${formatDistance(distanceInMeters.toFloat())}"
             } else if (locationPermissionState.status.isGranted) {
                 "Entfernung wird berechnet..."
@@ -329,15 +428,19 @@ fun OpenStreetMapDisplay(
             // --- Event-Zentrierungs-Button ---
             Button(
                 onClick = {
-                    eventGeoPoint?.let { point ->
-                        mapView?.controller?.animateTo(point)
-                        // Setze auch den Zoom für eine gute Ansicht
+                    if (mapEvents.size > 1) {
+                        // Bei vielen Events, zoome auf alle
+                        val boundingBox = BoundingBox.fromGeoPoints(mapEvents.map { it.toGeoPoint() })
+                        mapView?.zoomToBoundingBox(boundingBox, true, 100)
+                    } else if (mapEvents.size == 1) {
+                        // Bei einem Event, zentriere darauf
+                        mapView?.controller?.animateTo(mapEvents.first().toGeoPoint())
                         mapView?.controller?.setZoom(16.0)
-                        zoomLevel = 16.0 // Zoom-Level im State aktualisieren
+                        zoomLevel = 16.0
                     }
                 },
                 // Deaktiviere den Button, wenn kein Event-Punkt vorhanden ist
-                enabled = eventGeoPoint != null,
+                enabled = mapEvents.isNotEmpty(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF29719E).copy(alpha = 0.65f),
                     contentColor = Color.White
