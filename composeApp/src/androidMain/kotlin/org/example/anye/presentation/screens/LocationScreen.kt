@@ -399,9 +399,9 @@ fun OpenStreetMapDisplay(
                     animateZoomOutThenIn(localMapView, point, targetZoom = 16.8, durationIn = 1600L)
                 }
                 mapEvents.size > 1 -> {
-                    val box = BoundingBox.fromGeoPoints(mapEvents.map { it.toGeoPoint() }).increaseByScale(1.4f)
-                    Log.d("OpenStreetMapDisplay", "Zoome zu Multi-Events: $box")
-                    animateToBoundingBoxSmoothly(localMapView, box, duration = 2600L)
+                    val (centerPoint, optimalZoom) = calculateOptimalView(mapEvents)
+                    Log.d("OpenStreetMapDisplay", "Zoome zu Multi-Events: Center=$centerPoint, Zoom=$optimalZoom")
+                    animateZoomOutThenIn(localMapView, centerPoint, targetZoom = optimalZoom, durationIn = 1600L)
                 }
             }
 
@@ -729,6 +729,46 @@ fun BoundingBox.increaseByScale(scale: Float): BoundingBox {
         latCenter - newLatSpan / 2,
         lonCenter - newLonSpan / 2
     )
+}
+
+private fun calculateEventsCenter(events: List<MapEventInfo>): GeoPoint {
+    if (events.isEmpty()) return GeoPoint(51.1657, 10.4515) // Fallback: Deutschland Zentrum
+
+    var sumLat = 0.0
+    var sumLng = 0.0
+
+    events.forEach { event ->
+        sumLat += event.lat
+        sumLng += event.lng
+    }
+
+    return GeoPoint(sumLat / events.size, sumLng / events.size)
+}
+
+// Erweiterte Version die sowohl Mittelpunkt als auch Zoom basierend auf der Verteilung berechnet
+private fun calculateOptimalView(events: List<MapEventInfo>): Pair<GeoPoint, Double> {
+    if (events.isEmpty()) return Pair(GeoPoint(51.1657, 10.4515), 5.0)
+    if (events.size == 1) return Pair(events.first().toGeoPoint(), 16.8)
+
+    // Berechne Mittelpunkt
+    val center = calculateEventsCenter(events)
+
+    // Berechne den nötigen Zoom basierend auf der Ausdehnung der Events
+    val boundingBox = BoundingBox.fromGeoPoints(events.map { it.toGeoPoint() })
+    val latSpan = boundingBox.latNorth - boundingBox.latSouth
+    val lonSpan = boundingBox.lonEast - boundingBox.lonWest
+
+    // Heuristik für Zoom-Level basierend auf der Ausdehnung
+    val maxSpan = max(latSpan, lonSpan)
+    val targetZoom = when {
+        maxSpan < 0.01 -> 16.0 // Sehr nahe Events
+        maxSpan < 0.1 -> 14.0  // Nah beieinander
+        maxSpan < 1.0 -> 12.0  // Mittlere Entfernung
+        maxSpan < 5.0 -> 10.0  // Weite Entfernung
+        else -> 8.0            // Sehr weite Entfernung
+    }
+
+    return Pair(center, targetZoom)
 }
 
 
