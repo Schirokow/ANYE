@@ -305,7 +305,7 @@ fun OpenStreetMapDisplay(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
 
-
+    var hasShownUserInfo by remember { mutableStateOf(false) }
     // Dieser Effekt läuft, JEDES MAL wenn 'lastLocation' sich ändert.
     // Er aktualisiert die bestehenden Marker.
     LaunchedEffect(lastLocation, markerWindowMap, userMarker) {
@@ -314,13 +314,15 @@ fun OpenStreetMapDisplay(
         // User-Marker Position aktualisieren
         userMarker?.let { marker ->
             lastLocation?.let {
-                if (!marker.isEnabled) {
-                    marker.showInfoWindow()
-                }
                 marker.position = it
                 marker.setEnabled(true)
                 marker.snippet = "Aktuelle Position"
 
+                if (!hasShownUserInfo) {
+                    marker.showInfoWindow()
+                    fadeInInfoWindow(userInfoWindow)
+                    hasShownUserInfo = true
+                }
             }
         }
 
@@ -768,36 +770,6 @@ suspend fun smoothFollowTo(
     }
 }
 
-suspend fun animateAutoCenter(
-    mapView: MapView,
-    userLocation: GeoPoint?,
-    eventPoints: List<GeoPoint>,
-    duration: Long = 2200L
-) {
-    val hasUser = userLocation != null
-    val hasEvents = eventPoints.isNotEmpty()
-
-    if (!hasUser && !hasEvents) return
-
-    when {
-        // Nur Userposition verfügbar
-        hasUser && !hasEvents -> {
-            animateZoomOutThenIn(mapView, userLocation!!, targetZoom = 17.0)
-        }
-
-        // Nur Events verfügbar (Einzel oder mehrere)
-        !hasUser && hasEvents -> {
-            if (eventPoints.size == 1) {
-                animateZoomOutThenIn(mapView, eventPoints.first(), targetZoom = 16.8)
-            } else {
-                val box = BoundingBox.fromGeoPoints(eventPoints).increaseByScale(1.4f)
-                animateToBoundingBoxSmoothly(mapView, box, duration = duration)
-            }
-        }
-
-    }
-}
-
 fun BoundingBox.increaseByScale(scale: Float): BoundingBox {
     val latCenter = (latNorth + latSouth) / 2
     val lonCenter = (lonEast + lonWest) / 2
@@ -812,20 +784,3 @@ fun BoundingBox.increaseByScale(scale: Float): BoundingBox {
         lonCenter - newLonSpan / 2
     )
 }
-
-private fun calculateEventsCenter(events: List<MapEventInfo>): GeoPoint {
-    if (events.isEmpty()) return GeoPoint(51.1657, 10.4515) // Fallback: Deutschland Zentrum
-
-    var sumLat = 0.0
-    var sumLng = 0.0
-
-    events.forEach { event ->
-        sumLat += event.lat
-        sumLng += event.lng
-    }
-
-    return GeoPoint(sumLat / events.size, sumLng / events.size)
-}
-
-
-val eventOrange = Color(0xFFE64A19)
