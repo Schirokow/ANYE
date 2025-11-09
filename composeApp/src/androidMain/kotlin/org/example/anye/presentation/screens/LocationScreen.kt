@@ -69,10 +69,13 @@ import org.osmdroid.util.BoundingBox // Für Auto-Zoom
 import java.text.DecimalFormat
 import org.example.anye.data.TicketmasterEvent
 import kotlinx.coroutines.Dispatchers
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.example.anye.presentation.map.CustomMarkerInfoWindow
 import org.osmdroid.views.overlay.infowindow.InfoWindow
 import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow
+import kotlin.math.*
 
 
 // Eine Klasse, um Lat/Lng/Name zu bündeln
@@ -151,6 +154,7 @@ fun OpenStreetMapDisplay(
     singleEventName: String? = null
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var mapView by remember { mutableStateOf<MapView?>(null) }
     var zoomLevel by remember { mutableStateOf(15.0) }
 
@@ -164,6 +168,12 @@ fun OpenStreetMapDisplay(
     var userMarker by remember { mutableStateOf<Marker?>(null) }
     var userInfoWindow by remember { mutableStateOf<InfoWindow?>(null) } // Separates Fenster für User
 
+    // --- State, um die Start-Animation nur einmal auszuführen ---
+    var hasAnimatedOnLoad by remember { mutableStateOf(false) }
+
+    // --- Zwei separate States für Standort ---
+    var firstLocation by remember { mutableStateOf<GeoPoint?>(null) } // Nur für die Start-Animation
+    var lastLocation by remember { mutableStateOf<GeoPoint?>(null) }  // Für Live-Entfernungs-Updates
 
     // --- 2: Datenverarbeitung in einen LaunchedEffect verschieben ---
     LaunchedEffect(singleEventLat, singleEventLng, singleEventName) {
@@ -206,11 +216,6 @@ fun OpenStreetMapDisplay(
         }
     }
 
-    // Primärer Punkt zum Zentrieren (oder Berlin-Fallback)
-    val primaryGeoPoint = remember(mapEvents) {
-        mapEvents.firstOrNull()?.toGeoPoint() ?: GeoPoint(52.5200, 13.4050)
-    }
-
     // OSMDroid Konfiguration
     LaunchedEffect(Unit) {
         Configuration.getInstance().apply {
@@ -222,17 +227,14 @@ fun OpenStreetMapDisplay(
             setMultiTouchControls(true)
             minZoomLevel = 10.0
             maxZoomLevel = 30.0
-            controller.setZoom(zoomLevel)
-
-            // 5. Setze den initialen Mittelpunkt
-            // Wenn ein Event vorhanden ist, zentriere darauf.
-            // Sonst zentriere auf einen Standardwert (z.B. Berlin),
-            // der später vom User-Standort überschrieben wird.
-            controller.setCenter(GeoPoint(primaryGeoPoint))
+            // Setze einen sehr weiten Zoom, damit die Animation gut sichtbar ist
+            controller.setZoom(5.0)
+            controller.setCenter(GeoPoint(51.1657, 10.4515))
         }
+        Log.d("OpenStreetMapDisplay", "MapView initialisiert")
     }
 
-    // Dieser Effekt läuft, sobald die MapView bereit ist, und erstellt die Marker.
+    // Dieser Effekt erstellt nur noch die Marker, startet aber KEINE Animation.
     LaunchedEffect(mapView, mapEvents) {
         val localMapView = mapView ?: return@LaunchedEffect
 
@@ -244,8 +246,7 @@ fun OpenStreetMapDisplay(
         val newMarkerWindowMap = mutableMapOf<Marker, InfoWindow>()
 
         mapEvents.forEach { mapEvent ->
-            // Das Layout für die Blase aus der osmdroid-Bibliothek holen
-//            val infoWindow = MarkerInfoWindow(org.osmdroid.library.R.layout.bonuspack_bubble, localMapView)
+            // Benutze den Standard-Konstruktor
             val infoWindow = CustomMarkerInfoWindow(localMapView)
 
             val marker = Marker(localMapView).apply {
@@ -255,16 +256,10 @@ fun OpenStreetMapDisplay(
                 snippet = "Entfernung wird berechnet..."
                 val icon = ContextCompat.getDrawable(context, R.drawable.ic_event_pin)
                 icon?.let { setIcon(it) }
-
-                // --- DAS IST DIE KERNLOGIK ---
-                // Wir weisen dem Marker sein EIGENES InfoWindow-Objekt zu.
                 setInfoWindow(infoWindow)
 
-                // Wir überschreiben den Klick-Listener, um die Standard-Logik
-                // (die alle anderen Fenster schließt) zu umgehen.
                 setOnMarkerClickListener { m, _ ->
                     val tag = (m.relatedObject as? MutableMap<String, Any?>) ?: mutableMapOf()
-
                     if (m.isInfoWindowShown) {
                         tag["manuallyClosed"] = true
                         m.closeInfoWindow()
@@ -272,16 +267,14 @@ fun OpenStreetMapDisplay(
                         tag["manuallyClosed"] = false
                         m.showInfoWindow()
                     }
-
                     m.relatedObject = tag
                     true
                 }
             }
-
             newMarkerWindowMap[marker] = infoWindow
             localMapView.overlays.add(marker) // Marker zur Karte hinzufügen
 
-            // --- DEIN ZIEL: Alle Event-Fenster standardmäßig öffnen ---
+            // Alle Event-Fenster standardmäßig öffnen
             marker.showInfoWindow()
         }
 
@@ -294,41 +287,23 @@ fun OpenStreetMapDisplay(
                 title = ""
                 setEnabled(false)
             }
-            // --- NEU: User-Marker bekommt auch sein EIGENES InfoWindow ---
-//            val uInfoWindow = MarkerInfoWindow(org.osmdroid.library.R.layout.bonuspack_bubble, localMapView)
             val uInfoWindow = CustomMarkerInfoWindow(localMapView)
             uMarker.setInfoWindow(uInfoWindow)
             uMarker.setOnMarkerClickListener { m, _ ->
                 if (m.isInfoWindowShown) m.closeInfoWindow() else m.showInfoWindow()
                 true
             }
-
             userMarker = uMarker
             userInfoWindow = uInfoWindow
             localMapView.overlays.add(uMarker)
         }
 
-        // --- (Auto-Zoom bleibt gleich) ---
-        if (mapEvents.size > 1) {
-            val boundingBox = BoundingBox.fromGeoPoints(mapEvents.map { it.toGeoPoint() })
-            localMapView.post {
-                localMapView.zoomToBoundingBox(boundingBox, true, 100)
-            }
-        }
-
         localMapView.invalidate()
-
-        if (mapEvents.size == 1) {
-            val eventPoint = mapEvents.first().toGeoPoint()
-            localMapView.controller.setZoom(16.0)
-            localMapView.controller.animateTo(eventPoint)
-        }
     }
 
     val locationPermissionState = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
-    var lastLocation by remember { mutableStateOf<GeoPoint?>(null) }
 
 
     // Dieser Effekt läuft, JEDES MAL wenn 'lastLocation' sich ändert.
@@ -336,7 +311,7 @@ fun OpenStreetMapDisplay(
     LaunchedEffect(lastLocation, markerWindowMap, userMarker) {
         val localMapView = mapView ?: return@LaunchedEffect
 
-        // 1️⃣ User-Marker Position aktualisieren
+        // User-Marker Position aktualisieren
         userMarker?.let { marker ->
             lastLocation?.let {
                 if (!marker.isEnabled) {
@@ -346,13 +321,10 @@ fun OpenStreetMapDisplay(
                 marker.setEnabled(true)
                 marker.snippet = "Aktuelle Position"
 
-                if (mapEvents.isEmpty() && !localMapView.isAnimating) {
-                    localMapView.controller.animateTo(it)
-                }
             }
         }
 
-        // 2️⃣ Entfernung für Event-Marker aktualisieren
+        // Entfernung für Event-Marker aktualisieren
         markerWindowMap.forEach { (marker, infoWindow) ->
             val distanceString = when {
                 lastLocation != null -> {
@@ -373,7 +345,7 @@ fun OpenStreetMapDisplay(
             }
         }
 
-        // 3️⃣ Nur beim ersten erfolgreichen Standort-Fix ALLE öffnen
+        // Nur beim ersten erfolgreichen Standort-Fix ALLE öffnen
         if (lastLocation != null) {
             markerWindowMap.forEach { (marker, infoWindow) ->
                 // Nur öffnen, wenn:
@@ -392,6 +364,55 @@ fun OpenStreetMapDisplay(
         }
 
         localMapView.invalidate()
+    }
+
+    // --- START-ANIMATION: Korrigierte Version ---
+    LaunchedEffect(mapView, mapEvents.isNotEmpty(), hasAnimatedOnLoad) {
+        val localMapView = mapView ?: return@LaunchedEffect
+        if (hasAnimatedOnLoad || mapEvents.isEmpty()) return@LaunchedEffect // Wichtig: Nur animieren wenn Events da sind
+
+        Log.d("OpenStreetMapDisplay", "Start-Animation: Prüfe MapView Größe...")
+
+        // Warte auf MapView Messung mit Timeout
+        var waitCount = 0
+        while ((localMapView.width <= 0 || localMapView.height <= 0) && waitCount < 50) {
+            kotlinx.coroutines.delay(50)
+            waitCount++
+            Log.d("OpenStreetMapDisplay", "Warte auf MapView Messung... $waitCount")
+        }
+
+        if (localMapView.width <= 0 || localMapView.height <= 0) {
+            Log.e("OpenStreetMapDisplay", "MapView wurde nicht gemessen - Animation abgebrochen")
+            return@LaunchedEffect
+        }
+
+        // Zusätzliche Verzögerung für Map-Rendering
+        kotlinx.coroutines.delay(300)
+
+        Log.d("OpenStreetMapDisplay", "Start-Animation wird ausgeführt für ${mapEvents.size} Events")
+
+        try {
+            when {
+                mapEvents.size == 1 -> {
+                    val point = mapEvents.first().toGeoPoint()
+                    Log.d("OpenStreetMapDisplay", "Zoome zu Einzel-Event: $point")
+                    animateZoomOutThenIn(localMapView, point, targetZoom = 16.8, durationIn = 1600L)
+                }
+                mapEvents.size > 1 -> {
+                    val box = BoundingBox.fromGeoPoints(mapEvents.map { it.toGeoPoint() }).increaseByScale(1.4f)
+                    Log.d("OpenStreetMapDisplay", "Zoome zu Multi-Events: $box")
+                    animateToBoundingBoxSmoothly(localMapView, box, duration = 2600L)
+                }
+            }
+
+            // Erst NACH erfolgreicher Animation auf true setzen
+            hasAnimatedOnLoad = true
+            Log.d("OpenStreetMapDisplay", "Start-Animation erfolgreich abgeschlossen")
+
+        } catch (e: Exception) {
+            Log.e("OpenStreetMapDisplay", "Fehler bei Start-Animation: ${e.message}")
+            hasAnimatedOnLoad = true // Trotzdem auf true setzen, um Endlosschleife zu vermeiden
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -453,17 +474,18 @@ fun OpenStreetMapDisplay(
             // --- Event-Zentrierungs-Button ---
             Button(
                 onClick = {
-                    if (mapEvents.size > 1) {
-                        // Bei vielen Events, zoome auf alle
-                        val boundingBox =
-                            BoundingBox.fromGeoPoints(mapEvents.map { it.toGeoPoint() })
-                        mapView?.zoomToBoundingBox(boundingBox, true, 100)
-                    } else if (mapEvents.size == 1) {
-                        // Bei einem Event, zentriere darauf
-                        mapView?.controller?.animateTo(mapEvents.first().toGeoPoint())
-                        mapView?.controller?.setZoom(16.0)
-                        zoomLevel = 16.0
+                    coroutineScope.launch {
+                        val localMapView = mapView ?: return@launch
+
+                        if (mapEvents.size == 1) {
+                            val eventPoint = mapEvents.first().toGeoPoint()
+                            animateZoomOutThenIn(localMapView, eventPoint)
+                        } else if (mapEvents.size > 1) {
+                            val boundingBox = BoundingBox.fromGeoPoints(mapEvents.map { it.toGeoPoint() })
+                            animateToBoundingBoxSmoothly(localMapView, boundingBox)
+                        }
                     }
+
                 },
                 // Deaktiviere den Button, wenn kein Event-Punkt vorhanden ist
                 enabled = mapEvents.isNotEmpty(),
@@ -481,11 +503,11 @@ fun OpenStreetMapDisplay(
             // --- User-Zentrierungs-Button ---
             Button(
                 onClick = {
-                    lastLocation?.let { point ->
-                        mapView?.controller?.animateTo(point)
-                        // Setze auch den Zoom für eine gute Ansicht
-                        mapView?.controller?.setZoom(16.0)
-                        zoomLevel = 16.0 // Zoom-Level im State aktualisieren
+                    coroutineScope.launch {
+                        lastLocation?.let { point ->
+                            val map = mapView ?: return@launch
+                            animateZoomOutThenIn(map, point, targetZoom = 17.0)
+                        }
                     }
                 },
                 // Deaktiviere den Button, bis der User-Standort gefunden wurde
@@ -506,7 +528,13 @@ fun OpenStreetMapDisplay(
 
     if (locationPermissionState.status.isGranted) {
         LocationHandler { location ->
-            lastLocation = GeoPoint(location.latitude, location.longitude)
+            val newGeoPoint = GeoPoint(location.latitude, location.longitude)
+            // Setze den 'firstLocation'-Trigger nur, wenn er noch nicht gesetzt ist
+            if (firstLocation == null) {
+                firstLocation = newGeoPoint
+            }
+            // Aktualisiere 'lastLocation' immer für Live-Distanzen
+            lastLocation = newGeoPoint
         }
     } else {
         Column(
@@ -573,6 +601,134 @@ private fun formatDistance(meters: Float): String {
         val df = java.text.DecimalFormat("#.#")
         "${df.format(kilometers)} km"
     }
+}
+
+fun fadeInInfoWindow(infoWindow: InfoWindow?) {
+    val view = infoWindow?.view ?: return
+    view.alpha = 0f
+    view.post {
+        view.animate()
+            .alpha(1f)
+            .setDuration(600)
+            .start()
+    }
+}
+
+fun smoothInterpolator(t: Float): Double {
+    // Easing: Beschleunigt am Anfang, verlangsamt am Ende
+    return (1 - kotlin.math.cos(t * Math.PI)) / 2.0f
+}
+
+fun MapView.getBoundingBoxZoom(boundingBox: BoundingBox): Double {
+    val width = this.width.toDouble()
+    val height = this.height.toDouble()
+    if (width == 0.0 || height == 0.0) return 12.0 // Fallback
+
+    val latSpan = boundingBox.latNorth - boundingBox.latSouth
+    val lonSpan = boundingBox.lonEast - boundingBox.lonWest
+
+    if (latSpan <= 0 || lonSpan <= 0) return 12.0
+
+    val worldSize = 256.0
+    val zoomX = ln(360.0 * width / (lonSpan * worldSize)) / ln(2.0)
+    val zoomY = ln(180.0 * height / (latSpan * worldSize)) / ln(2.0)
+
+    return min(zoomX, zoomY).coerceIn(this.minZoomLevel, this.maxZoomLevel) - 0.5 // Etwas rauszoomen für Padding
+}
+
+suspend fun animateZoomOutThenIn(
+    mapView: MapView,
+    target: GeoPoint,
+    targetZoom: Double = 16.8,
+    zoomOutFactor: Double = 0.4, // Stärker rauszoomen für dramatischere Animation
+    durationOut: Long = 800L,
+    durationIn: Long = 1400L
+) {
+    val startZoom = mapView.zoomLevelDouble
+    val zoomOutLevel = (startZoom * zoomOutFactor).coerceAtLeast(mapView.minZoomLevel)
+
+    // Erst schnell rauszoomen
+    animateZoomSmoothly(mapView, startZoom, zoomOutLevel, durationOut)
+    kotlinx.coroutines.delay(200)
+
+    // Zum Ziel zentrieren
+    withContext(Dispatchers.Main) {
+        mapView.controller.animateTo(target)
+    }
+    kotlinx.coroutines.delay(100)
+
+    // Sanft reinzoomen
+    animateZoomSmoothly(mapView, zoomOutLevel, targetZoom, durationIn)
+}
+
+suspend fun animateZoomSmoothly(
+    mapView: MapView,
+    startZoom: Double,
+    endZoom: Double,
+    duration: Long = 1200L
+) {
+    val steps = 60
+    val stepDelay = duration / steps
+    for (i in 0..steps) {
+        val t = i / steps.toFloat()
+        val interpolatedZoom = startZoom + (endZoom - startZoom) * smoothInterpolator(t)
+        withContext(Dispatchers.Main) {
+            mapView.controller.setZoom(interpolatedZoom)
+            mapView.invalidate()
+        }
+        kotlinx.coroutines.delay(stepDelay)
+    }
+}
+
+suspend fun animateToBoundingBoxSmoothly(
+    mapView: MapView,
+    boundingBox: BoundingBox,
+    duration: Long = 1800L
+) {
+    val startZoom = mapView.zoomLevelDouble
+    val startCenter = mapView.mapCenter
+
+    // Berechne den Ziel-Zoom für die BoundingBox
+    val targetZoom = mapView.getBoundingBoxZoom(boundingBox)
+    val targetCenter = boundingBox.centerWithDateLine
+
+    // Gleiche Zoom-Out-Then-In Animation wie bei einzelnen Events
+    val zoomOutFactor = 0.4
+    val zoomOutLevel = (startZoom * zoomOutFactor).coerceAtLeast(mapView.minZoomLevel)
+
+    // 1. Erst rauszoomen
+    animateZoomSmoothly(mapView, startZoom, zoomOutLevel, duration / 3)
+    kotlinx.coroutines.delay(200)
+
+    // 2. Zum Ziel zentrieren
+    withContext(Dispatchers.Main) {
+        mapView.controller.animateTo(targetCenter)
+    }
+    kotlinx.coroutines.delay(100)
+
+    // 3. Sanft reinzoomen auf den berechneten Zoom-Level
+    animateZoomSmoothly(mapView, zoomOutLevel, targetZoom, duration * 2 / 3)
+
+    // Finale Korrektur
+    withContext(Dispatchers.Main) {
+        mapView.controller.setCenter(targetCenter)
+        mapView.controller.setZoom(targetZoom)
+    }
+}
+
+fun BoundingBox.increaseByScale(scale: Float): BoundingBox {
+    val latCenter = (latNorth + latSouth) / 2
+    val lonCenter = (lonEast + lonWest) / 2
+
+    val newLatSpan = (latNorth - latSouth) * scale
+    val newLonSpan = (lonEast - lonWest) * scale
+
+    return BoundingBox(
+        latCenter + newLatSpan / 2,
+        lonCenter + newLonSpan / 2,
+        latCenter - newLatSpan / 2,
+        lonCenter - newLonSpan / 2
+    )
 }
 
 
