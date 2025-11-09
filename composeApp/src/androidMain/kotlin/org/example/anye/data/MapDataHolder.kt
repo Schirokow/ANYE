@@ -9,4 +9,6 @@ import org.example.anye.data.TicketmasterEvent
  */
 object MapDataHolder {
     var events: List<TicketmasterEvent> = emptyList()
+
+    var shouldFollowUser: Boolean = true
 }

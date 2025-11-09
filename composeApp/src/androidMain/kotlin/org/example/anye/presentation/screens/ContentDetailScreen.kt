@@ -56,6 +56,7 @@ import androidx.compose.ui.text.style.TextAlign
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
+import org.example.anye.data.MapDataHolder
 import org.example.anye.ui.components.AuthStatusIndicator
 import org.example.anye.viewmodels.ContentDetailAction
 import org.example.anye.viewmodels.FavoriteAction
@@ -211,6 +212,7 @@ fun ContentDetailScreen(navController: NavController, id: String){
                 text = "Auf der Karte",
                 onClick = {
                     Log.d(TAG, "Navigating to location screen")
+                    MapDataHolder.shouldFollowUser = false // Follow aus
 
                     // 1. Hole die Location-Daten aus dem Event-Objekt
                     val venue = event?._embedded?.venues?.firstOrNull()

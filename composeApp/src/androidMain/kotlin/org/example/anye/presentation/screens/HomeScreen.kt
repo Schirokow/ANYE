@@ -219,6 +219,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
                                 // 1. Speichere die aktuelle Event-Liste im Holder
                                 // (eventsData ist die Variable aus deinem HomeScreen-Scope)
                                 MapDataHolder.events = eventsData
+                                MapDataHolder.shouldFollowUser = false // Follow aus
 
                                 Log.d(TAG, "Navigiere zur Karte mit ${eventsData.size} Events.")
 

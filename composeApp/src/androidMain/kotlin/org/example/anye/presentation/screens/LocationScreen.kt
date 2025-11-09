@@ -366,6 +366,28 @@ fun OpenStreetMapDisplay(
         localMapView.invalidate()
     }
 
+    // Follow-Modus: Karte folgt automatisch dem User
+    var isFollowingUser by remember { mutableStateOf(MapDataHolder.shouldFollowUser) }
+
+    // --- PERMANENT SMOOTH FOLLOW MODE ---
+    var lastAnimatedCenter by remember { mutableStateOf<GeoPoint?>(null) }
+
+    LaunchedEffect(lastLocation, isFollowingUser) {
+        val map = mapView ?: return@LaunchedEffect
+        val userPoint = lastLocation ?: return@LaunchedEffect
+        MapDataHolder.shouldFollowUser = isFollowingUser
+
+        if (!isFollowingUser) return@LaunchedEffect // Kein Follow, wenn deaktiviert
+
+        val shouldAnimate = lastAnimatedCenter == null ||
+                userPoint.distanceToAsDouble(lastAnimatedCenter) > 8.0 // ~8m Bewegung
+
+        if (shouldAnimate) {
+            smoothFollowTo(map, lastAnimatedCenter, userPoint)
+            lastAnimatedCenter = userPoint
+        }
+    }
+
     // --- START-ANIMATION: Korrigierte Version ---
     LaunchedEffect(mapView, mapEvents.isNotEmpty(), hasAnimatedOnLoad) {
         val localMapView = mapView ?: return@LaunchedEffect
@@ -399,9 +421,9 @@ fun OpenStreetMapDisplay(
                     animateZoomOutThenIn(localMapView, point, targetZoom = 16.8, durationIn = 1600L)
                 }
                 mapEvents.size > 1 -> {
-                    val (centerPoint, optimalZoom) = calculateOptimalView(mapEvents)
-                    Log.d("OpenStreetMapDisplay", "Zoome zu Multi-Events: Center=$centerPoint, Zoom=$optimalZoom")
-                    animateZoomOutThenIn(localMapView, centerPoint, targetZoom = optimalZoom, durationIn = 1600L)
+                    val box = BoundingBox.fromGeoPoints(mapEvents.map { it.toGeoPoint() }).increaseByScale(1.4f)
+                    Log.d("OpenStreetMapDisplay", "Zoome zu Multi-Events: $box")
+                    animateToBoundingBoxSmoothly(localMapView, box, duration = 2600L)
                 }
             }
 
@@ -475,6 +497,8 @@ fun OpenStreetMapDisplay(
             Button(
                 onClick = {
                     coroutineScope.launch {
+                        isFollowingUser = false // Follow ausschalten
+
                         val localMapView = mapView ?: return@launch
 
                         if (mapEvents.size == 1) {
@@ -504,6 +528,8 @@ fun OpenStreetMapDisplay(
             Button(
                 onClick = {
                     coroutineScope.launch {
+                        isFollowingUser = true //Follow einschalten
+                        MapDataHolder.shouldFollowUser = true // Synchron bleiben
                         lastLocation?.let { point ->
                             val map = mapView ?: return@launch
                             animateZoomOutThenIn(map, point, targetZoom = 17.0)
@@ -716,6 +742,62 @@ suspend fun animateToBoundingBoxSmoothly(
     }
 }
 
+suspend fun smoothFollowTo(
+    mapView: MapView,
+    from: GeoPoint?,
+    to: GeoPoint,
+    duration: Long = 900L
+) {
+    val start = from ?: mapView.mapCenter as GeoPoint
+    val steps = 30
+    val delayPerStep = duration / steps
+
+    val dLat = (to.latitude - start.latitude) / steps
+    val dLng = (to.longitude - start.longitude) / steps
+
+    for (i in 1..steps) {
+        val lat = start.latitude + dLat * i
+        val lng = start.longitude + dLng * i
+        val intermediate = GeoPoint(lat, lng)
+
+        withContext(Dispatchers.Main) {
+            mapView.controller.setCenter(intermediate)
+            mapView.invalidate()
+        }
+        kotlinx.coroutines.delay(delayPerStep)
+    }
+}
+
+suspend fun animateAutoCenter(
+    mapView: MapView,
+    userLocation: GeoPoint?,
+    eventPoints: List<GeoPoint>,
+    duration: Long = 2200L
+) {
+    val hasUser = userLocation != null
+    val hasEvents = eventPoints.isNotEmpty()
+
+    if (!hasUser && !hasEvents) return
+
+    when {
+        // Nur Userposition verfügbar
+        hasUser && !hasEvents -> {
+            animateZoomOutThenIn(mapView, userLocation!!, targetZoom = 17.0)
+        }
+
+        // Nur Events verfügbar (Einzel oder mehrere)
+        !hasUser && hasEvents -> {
+            if (eventPoints.size == 1) {
+                animateZoomOutThenIn(mapView, eventPoints.first(), targetZoom = 16.8)
+            } else {
+                val box = BoundingBox.fromGeoPoints(eventPoints).increaseByScale(1.4f)
+                animateToBoundingBoxSmoothly(mapView, box, duration = duration)
+            }
+        }
+
+    }
+}
+
 fun BoundingBox.increaseByScale(scale: Float): BoundingBox {
     val latCenter = (latNorth + latSouth) / 2
     val lonCenter = (lonEast + lonWest) / 2
@@ -743,32 +825,6 @@ private fun calculateEventsCenter(events: List<MapEventInfo>): GeoPoint {
     }
 
     return GeoPoint(sumLat / events.size, sumLng / events.size)
-}
-
-// Erweiterte Version die sowohl Mittelpunkt als auch Zoom basierend auf der Verteilung berechnet
-private fun calculateOptimalView(events: List<MapEventInfo>): Pair<GeoPoint, Double> {
-    if (events.isEmpty()) return Pair(GeoPoint(51.1657, 10.4515), 5.0)
-    if (events.size == 1) return Pair(events.first().toGeoPoint(), 16.8)
-
-    // Berechne Mittelpunkt
-    val center = calculateEventsCenter(events)
-
-    // Berechne den nötigen Zoom basierend auf der Ausdehnung der Events
-    val boundingBox = BoundingBox.fromGeoPoints(events.map { it.toGeoPoint() })
-    val latSpan = boundingBox.latNorth - boundingBox.latSouth
-    val lonSpan = boundingBox.lonEast - boundingBox.lonWest
-
-    // Heuristik für Zoom-Level basierend auf der Ausdehnung
-    val maxSpan = max(latSpan, lonSpan)
-    val targetZoom = when {
-        maxSpan < 0.01 -> 16.0 // Sehr nahe Events
-        maxSpan < 0.1 -> 14.0  // Nah beieinander
-        maxSpan < 1.0 -> 12.0  // Mittlere Entfernung
-        maxSpan < 5.0 -> 10.0  // Weite Entfernung
-        else -> 8.0            // Sehr weite Entfernung
-    }
-
-    return Pair(center, targetZoom)
 }
 
 
