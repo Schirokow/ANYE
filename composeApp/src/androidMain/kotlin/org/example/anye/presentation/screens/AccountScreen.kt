@@ -322,7 +322,7 @@ fun AccountScreen(navController: NavController) {
                             Button(
                                 onClick = { showDeleteDialog = false },
                                 colors = buttonColors(
-                                    containerColor = Color.Green
+                                    containerColor = Color.Blue
                                 )
                             ) {
                                 Text("Abbrechen", color = Color.White)

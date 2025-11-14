@@ -1,20 +1,17 @@
 package org.example.anye.viewmodels
 
-import org.example.anye.data.FavoriteRepository
-import org.example.anye.data.TicketmasterEvent
-import org.example.anye.usecases.GetEventByIdUseCase
-import org.example.anye.usecases.GetEventsUseCase
-import com.rickclephas.kmp.observableviewmodel.ViewModel
-import com.rickclephas.kmp.observableviewmodel.stateIn
 import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
-import com.rickclephas.kmp.observableviewmodel.launch
+import com.rickclephas.kmp.observableviewmodel.ViewModel
 import com.rickclephas.kmp.observableviewmodel.launch
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
+import org.example.anye.data.ticketmaster_data_classes.TicketmasterEvent
 import org.example.anye.logMessage
+import org.example.anye.usecases.GetEventByIdUseCase
+import org.example.anye.usecases.GetEventsUseCase
 import org.example.anye.usecases.GetFavoriteUseCase
 
 class ContentDetailViewModel(

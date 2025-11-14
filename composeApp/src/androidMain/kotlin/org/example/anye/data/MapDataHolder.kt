@@ -1,6 +1,6 @@
 package org.example.anye.data
 
-import org.example.anye.data.TicketmasterEvent
+import org.example.anye.data.ticketmaster_data_classes.TicketmasterEvent
 
 /**
  * Ein einfacher statischer "Holder", um eine Event-Liste

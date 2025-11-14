@@ -18,6 +18,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.ArrowDownward
+import androidx.compose.material.icons.rounded.ArrowUpward
+import androidx.compose.material.icons.rounded.LocationOn
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -31,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +46,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import com.example.evoo.ui.theme.colorthemetype.BottomDarkBlue
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -48,34 +54,23 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.example.anye.R
+import org.example.anye.data.MapDataHolder
+import org.example.anye.presentation.map.CustomMarkerInfoWindow
 import org.example.anye.ui.components.AuthStatusIndicator
 import org.example.anye.ui.menu.AnyeBottomBar
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.rounded.ArrowDownward
-import androidx.compose.material.icons.rounded.ArrowUpward
-import androidx.compose.material3.Icon
-import androidx.compose.material.icons.rounded.LocationOn
-import androidx.compose.material.icons.rounded.Person
-import com.example.evoo.ui.theme.colorthemetype.BottomDarkBlue
-import org.example.anye.data.MapDataHolder // neuer Holder
-import org.osmdroid.util.BoundingBox // Für Auto-Zoom
-import java.text.DecimalFormat
-import org.example.anye.data.TicketmasterEvent
-import kotlinx.coroutines.Dispatchers
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.example.anye.presentation.map.CustomMarkerInfoWindow
 import org.osmdroid.views.overlay.infowindow.InfoWindow
-import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow
-import kotlin.math.*
+import kotlin.math.ln
+import kotlin.math.min
 
 
 // Eine Klasse, um Lat/Lng/Name zu bündeln

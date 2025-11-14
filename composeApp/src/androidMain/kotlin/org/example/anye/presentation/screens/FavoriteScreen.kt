@@ -215,7 +215,7 @@ fun FavoriteScreen(navController: NavController) {
                 Button(
                     onClick = { showDeleteAllDialog = false },
                     colors = buttonColors(
-                        containerColor = Color.Green
+                        containerColor = Color.Blue
                     )
                 )
                 {

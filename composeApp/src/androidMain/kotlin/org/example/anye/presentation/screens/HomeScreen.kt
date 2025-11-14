@@ -68,7 +68,7 @@ import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
 import org.example.anye.data.MapDataHolder
-import org.example.anye.data.TicketmasterEvent
+import org.example.anye.data.ticketmaster_data_classes.TicketmasterEvent
 import org.example.anye.ui.components.AuthStatusIndicator
 import org.example.anye.ui.components.buttons.ClickButton
 import org.example.anye.ui.components.card.NewEventCard
@@ -300,7 +300,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
                 Button(
                     onClick = { showDeleteDialog = false },
                     colors = buttonColors(
-                        containerColor = Color.Green
+                        containerColor = Color.Blue
                     )
                 ) {
                     Text("Abbrechen", color = Color.White)
