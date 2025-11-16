@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -51,6 +52,7 @@ kotlin {
             // Room
             implementation(libs.room.runtime)
             implementation(libs.sqlite.bundled)
+
         }
 
         androidMain.dependencies {
@@ -59,6 +61,14 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.koin.androidx.navigation)
             implementation(libs.koin.androidx.compose)
+
+            // Firebase
+            implementation(project.dependencies.platform("com.google.firebase:firebase-bom:34.3.0"))
+            implementation("com.google.firebase:firebase-analytics")
+            implementation ("com.google.firebase:firebase-firestore")
+            implementation ("com.google.firebase:firebase-storage")
+            implementation("com.google.firebase:firebase-auth")
+
         }
 
         iosMain.dependencies {
@@ -69,6 +79,14 @@ kotlin {
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlin.testJunit)
+            implementation(libs.assertk)
+            implementation(kotlin("test-annotations-common"))
+            implementation(kotlin("test"))
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+            implementation("org.junit.jupiter:junit-jupiter:6.0.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
         }
     }
 }

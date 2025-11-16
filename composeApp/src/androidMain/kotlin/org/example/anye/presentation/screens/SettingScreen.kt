@@ -28,6 +28,7 @@ import androidx.navigation.NavController
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
+import org.example.anye.ui.components.AuthStatusIndicator
 import org.example.anye.ui.menu.AnyeBottomBar
 
 @Composable
@@ -46,6 +47,14 @@ fun SettingScreen(navController: NavController){
                     BottomDarkBlue
                 )))
         ){
+             //Auth-Status oben rechts
+            AuthStatusIndicator(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
+            )
+
+
             Row (
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically

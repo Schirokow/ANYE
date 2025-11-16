@@ -2,6 +2,7 @@ package org.example.anye.data
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.example.anye.data.ticketmaster_data_classes.TicketmasterEvent
 
 interface EventsRepository {
     fun getEventsDataFlow(city: String): Flow<List<TicketmasterEvent>>

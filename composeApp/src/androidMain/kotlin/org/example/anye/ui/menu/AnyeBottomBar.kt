@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.currentBackStackEntryAsState
 //import com.example.evoo.business.AuthManager
 import androidx.compose.runtime.getValue
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun rememberFakeNavController(): NavController {
@@ -46,8 +47,6 @@ fun PreviewAnyeBottomBar() {
 }
 
 
-
-
 @Composable
 fun AnyeBottomBar(navController: NavController)
 //onHomeClick: () -> Unit,
@@ -58,6 +57,7 @@ fun AnyeBottomBar(navController: NavController)
 //)
 {
 //    val currentUser = AuthManager.currentUser //Aktuellen Benutzer abrufen
+    val currentUser = FirebaseAuth.getInstance().currentUser
 
     // Zustände für jedes Element
     val (homeSelected, setHomeSelected) = remember { mutableStateOf(false) }
@@ -76,7 +76,7 @@ fun AnyeBottomBar(navController: NavController)
         setHomeSelected(currentRoute == "HomeScreen")
         setFavoriteSelected(currentRoute == "FavoriteScreen")
         setProfileSelected(
-            currentRoute?.startsWith("ProfileScreen1") == true ||
+            currentRoute?.startsWith("ProfileScreen") == true ||
                     currentRoute == "LoginScreen" ||
                     currentRoute == "RegisterScreen"
         )
@@ -102,14 +102,30 @@ fun AnyeBottomBar(navController: NavController)
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { navController.navigate("HomeScreen")}) {
+                IconButton(onClick = {
+                    navController.navigate("HomeScreen"){
+                        launchSingleTop = true // kein neues Ziel erzeugen, wenn bereits sichtbar
+                        restoreState = true // alten Zustand wiederherstellen
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true // Zustand (ViewModel + UI) merken
+                        }
+                    }
+                }) {
                     Icon(
                         imageVector = Icons.Filled.Home,
                         contentDescription = "Home",
                         tint = if (homeSelected) Color.Yellow else Color.White
                     )
                 }
-                IconButton(onClick = {navController.navigate("FavoriteScreen")}) {
+                IconButton(onClick = {
+                    navController.navigate("FavoriteScreen"){
+                        launchSingleTop = true
+                        restoreState = false
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                    }
+                }) {
                     Icon(
                         imageVector = Icons.Filled.Favorite,
                         contentDescription = "Favorite",
@@ -120,15 +136,27 @@ fun AnyeBottomBar(navController: NavController)
                 Spacer(modifier = Modifier.width(56.dp))
 
                 IconButton(onClick = {
-                    Log.d("Navigation","Navigating to ProfileScreen1")
-                    navController.navigate("LoginScreen")
-//                    if (currentUser != null) {
-//                        // Navigiere zum Profil mit Benutzernamen
-//                        navController.navigate("ProfileScreen1/${currentUser.name}")
-//                    } else {
-//                        // Fallback zur Login-Seite
-//                        navController.navigate("LoginScreen")
-//                    }
+//                    Log.d("Navigation","Navigating to ProfileScreen")
+//                    navController.navigate("LoginScreen")
+                    if (currentUser != null) {
+                        // Navigiere zum Profil mit Benutzernamen
+                        navController.navigate("ProfileScreen"){
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                        }
+                    } else {
+                        // Fallback zur Login-Seite
+                        navController.navigate("LoginScreen"){
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                        }
+                    }
                 }) {
                     Icon(
                         imageVector = Icons.Filled.Person,
@@ -136,7 +164,15 @@ fun AnyeBottomBar(navController: NavController)
                         tint = if (profileSelected) Color.Yellow else Color.White
                     )
                 }
-                IconButton(onClick = {navController.navigate("SettingScreen")}) {
+                IconButton(onClick = {
+                    navController.navigate("SettingScreen"){
+                        launchSingleTop = true
+                        restoreState = true
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                    }
+                }) {
                     Icon(
                         imageVector = Icons.Filled.Settings,
                         contentDescription = "Settings",
@@ -151,7 +187,15 @@ fun AnyeBottomBar(navController: NavController)
                 .align(Alignment.BottomCenter)
                 .offset(y = (-5).dp)
                 .background(BottomDarkBlue, CircleShape)
-                .clickable { navController.navigate("LocationScreen") },
+                .clickable {
+                    navController.navigate("LocationScreen"){
+                        launchSingleTop = true
+                        restoreState = true
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                    }
+                           },
             //.shadow(2.dp, CircleShape),
             contentAlignment = Alignment.Center
         ) {
@@ -169,4 +213,5 @@ fun AnyeBottomBar(navController: NavController)
                 }
             )
         }
-    }}
+    }
+}

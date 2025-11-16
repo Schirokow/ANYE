@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.coroutines.flow.Flow
 import org.example.anye.data.dao.FavoriteDao
+import org.example.anye.data.ticketmaster_data_classes.TicketmasterEvent
 
 @Entity(tableName = "favorites")
 data class Favorite(

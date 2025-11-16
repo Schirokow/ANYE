@@ -23,13 +23,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,6 +53,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -56,14 +64,17 @@ import org.example.anye.viewmodels.FavoriteViewModel
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
+import org.example.anye.ui.components.AuthStatusIndicator
 import org.example.anye.ui.components.buttons.ClickButton
 import org.example.anye.ui.components.card.NewEventCard
 import org.example.anye.ui.menu.AnyeBottomBar
+import org.example.anye.viewmodels.Action
+import org.example.anye.viewmodels.FavoriteAction
 import org.example.anye.viewmodels.HomeViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun FavoriteScreen(navController: NavController){
+fun FavoriteScreen(navController: NavController) {
     val TAG = "FavoriteScreen"
     Log.d(TAG, "Favorite screen initialized")
 
@@ -72,25 +83,78 @@ fun FavoriteScreen(navController: NavController){
     val viewModel: FavoriteViewModel = koinViewModel()
     val favoriteEvents by viewModel.favoriteEvents.collectAsState()
     var showDeleteAllDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AccentColor)
-    ){
+    LaunchedEffect(Unit) {
+        viewModel.action.collect { action ->
+            when (action) {
+                is FavoriteAction.Success -> {
+                    snackbarHostState.showSnackbar(action.message)
+                }
+                is FavoriteAction.Error -> {
+                    snackbarHostState.showSnackbar(action.message)
+                }
+                FavoriteAction.Initial -> Unit
+            }
+        }
+    }
+
+    // Scaffold als Hauptcontainer verwenden
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                // Hole Farbe aus den SnackbarData-Extras
+                val background = when (data.visuals.message) {
+                    "Fehler beim entfernen!" -> Color(0xFFF44336) // Rot
+                    "Fehler beim Favoriten löschen!" -> Color(0xFFF44336) // Rot
+                    else -> Color(0xFF2196F3) // Blau (Standard)
+                }
+                Snackbar(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    containerColor = background,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = data.visuals.message,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+        },
+        containerColor = AccentColor,
+    ) { paddingValues ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(WindowInsets.systemBars.asPaddingValues()) // Eine Function um den Content unter der Status Bar anzuzeigen.
-                .background(brush = Brush.verticalGradient(colors = listOf(
-                    TopLightBlue,
-                    BottomDarkBlue
-                )))
-        ){
-            Row (
+                .padding(paddingValues)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            TopLightBlue,
+                            BottomDarkBlue
+                        )
+                    )
+                )
+        ) {
+            // Auth-Status oben rechts
+            AuthStatusIndicator(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
+            )
+
+
+            Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
-            ){
+            ) {
                 Icon(
                     imageVector = Icons.Rounded.ArrowBack,
                     contentDescription = "Zurück",
@@ -120,28 +184,51 @@ fun FavoriteScreen(navController: NavController){
     if (showDeleteAllDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteAllDialog = false },
-            title = { Text("Alle Favoriten löschen?") },
-            text = { Text("Möchtest du wirklich alle Favoriten aus der Datenbank löschen?") },
+            title = {
+                Text(
+                    "Alle Favoriten löschen?",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+                    },
+            text = {
+                Text(
+                    "Möchtest du wirklich alle Favoriten aus der Datenbank löschen?",
+                    color = Color.White
+                )
+                   },
             confirmButton = {
                 Button(
                     onClick = {
                         viewModel.deleteAllFavorites()
                         showDeleteAllDialog = false
                         Log.d(TAG, "All favorites deleted")
-                    }
+                    },
+                    colors = buttonColors(
+                        containerColor = Color.Red
+                    )
                 ) {
-                    Text("Löschen")
+                    Text("Ja, löschen", color = Color.White)
                 }
             },
             dismissButton = {
-                Button(onClick = { showDeleteAllDialog = false }) {
-                    Text("Abbrechen")
+                Button(
+                    onClick = { showDeleteAllDialog = false },
+                    colors = buttonColors(
+                        containerColor = Color.Blue
+                    )
+                )
+                {
+                    Text("Abbrechen", color = Color.White)
                 }
-            }
+            },
+            containerColor = Color(0xFF1E1E1E),
+            shape = RoundedCornerShape(16.dp)
         )
     }
 
 }
+
 @Composable
 fun FavoriteContent(navController: NavController, viewModel: FavoriteViewModel) {
     val TAG = "FavoriteContent"
@@ -177,7 +264,10 @@ fun FavoriteContent(navController: NavController, viewModel: FavoriteViewModel) 
                     title = event.name,
                     datum = event.date,
                     onClick = {
-                        Log.d(TAG, "Event card clicked - id: ${event.eventId}, title: ${event.name.take(15)}...")
+                        Log.d(
+                            TAG,
+                            "Event card clicked - id: ${event.eventId}, title: ${event.name.take(15)}..."
+                        )
                         selectedEventData = event
                     },
                     isLarge = true,
@@ -254,6 +344,7 @@ fun FavoriteContent(navController: NavController, viewModel: FavoriteViewModel) 
                             viewModel.toggleFavorite(event)
                             favoriteStates[event.eventId] =
                                 !(favoriteStates[event.eventId] ?: false)
+                            selectedEventData = null
                         }
                 )
             }

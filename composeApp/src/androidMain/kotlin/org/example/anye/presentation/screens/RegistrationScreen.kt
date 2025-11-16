@@ -18,53 +18,138 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.firebase.Firebase
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
+import kotlinx.coroutines.launch
 import org.example.anye.ui.components.buttons.ClickButton
-import org.example.anye.data.User
 import org.example.anye.viewmodels.LoginViewModel
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
+import org.example.anye.viewmodels.AuthResult
 import org.koin.androidx.compose.koinViewModel
 
-private const val TAG = "RegistrationScreen"
+const val TAG = "RegistrationScreen"
 
 @Composable
 fun RegistrationScreen(navController: NavController) {
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AccentColor)
-    ) {
+    val auth = Firebase.auth
+    val viewModel: LoginViewModel = koinViewModel()
+
+    // Zustand für den Snackbar erstellen
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    var userNameState by remember { mutableStateOf("") }
+    var emailState by remember { mutableStateOf("") }
+    var passwordState by remember { mutableStateOf("") }
+    var repeatPasswordState by remember { mutableStateOf("") }
+
+    // Zustand für den Bestätigungsdialog
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+
+    // Auf Events vom ViewModel hören
+    LaunchedEffect(Unit) {
+        viewModel.authResult.collect { result ->
+            when (result) {
+                is AuthResult.Success -> {
+                    snackbarHostState.showSnackbar(message = result.message)
+                    // Navigation nach erfolgreicher Registrierung
+                    navController.navigate("ProfileScreen") {
+                        popUpTo("RegistrationScreen") {
+                            inclusive = true
+                        } // verhindert zurück zur Login-Seite
+                    }
+                }
+
+                is AuthResult.Error -> {
+                    snackbarHostState.showSnackbar(message = result.message)
+                }
+
+                is AuthResult.Initial -> {
+                    // Nichts tun beim Start
+                }
+            }
+        }
+    }
+
+    // Scaffold als Hauptcontainer verwenden
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                // Hole Farbe aus den SnackbarData-Extras
+                val background = when (data.visuals.message) {
+                        "Registrierung erfolgreich!" -> Color(0xFF4CAF50) // Grün
+                    in listOf(
+                        "Fehler bei der Registrierung",
+                        "Passwörter stimmen nicht überein"
+                    ) -> Color(0xFFF44336) // Rot
+                    else -> Color(0xFF2196F3) // Blau (Standard)
+                }
+                Snackbar(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    containerColor = background,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = data.visuals.message,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+        },
+        containerColor = AccentColor,
+    ) { paddingValues -> // paddingValues berücksichtigt die Systemleisten
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(WindowInsets.systemBars.asPaddingValues()) // Eine Function um den Content unter der Status Bar anzuzeigen.
+                .padding(paddingValues)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
@@ -74,10 +159,10 @@ fun RegistrationScreen(navController: NavController) {
                     )
                 )
         ) {
-            Row (
+            Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
-            ){
+            ) {
                 Icon(
                     imageVector = Icons.Rounded.ArrowBack,
                     contentDescription = "ArrowBack",
@@ -96,41 +181,12 @@ fun RegistrationScreen(navController: NavController) {
                     fontSize = 20.sp,
                     color = Color.White,
                     modifier = Modifier
-                        .clickable{
+                        .clickable {
                             Log.d(TAG, "Navigating to LoginScreen")
                             navController.navigate("LoginScreen")
                         }
                 )
             }
-
-            val viewModel: LoginViewModel = koinViewModel()
-            val userData by viewModel.users.collectAsState()
-
-            val userNameState = remember { mutableStateOf(TextFieldValue()) }
-            val emailState = remember { mutableStateOf(TextFieldValue()) }
-            val passwordState = remember { mutableStateOf(TextFieldValue()) }
-            val repeatPasswordState = remember { mutableStateOf(TextFieldValue()) }
-
-            var registrationError by remember { mutableStateOf<RegistrationError?>(null) }
-
-            if (registrationError != null) {
-                Log.w(TAG, "Registration error: ${registrationError?.name} - ${registrationError?.message}")
-                AlertDialog(
-                    onDismissRequest = { registrationError = null },
-                    title = { Text("Registrierungsfehler") },
-                    text = { Text(registrationError!!.message) },
-                    confirmButton = {
-                        Button(onClick = {
-                            Log.d(TAG, "Dismissed error dialog: ${registrationError?.name}")
-                            registrationError = null
-                        }) {
-                            Text("OK")
-                        }
-                    }
-                )
-            }
-
-
 
             Column(
                 modifier = Modifier
@@ -159,48 +215,72 @@ fun RegistrationScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                TextField(
-                    value = userNameState.value,
-                    onValueChange = { newText -> userNameState.value = newText },
+                OutlinedTextField(
+                    value = userNameState,
+                    onValueChange = { userNameState = it },
 //                    label = { Text("Benutzername") },
-                    placeholder = { Text("Benutzername") },
+                    placeholder = { Text("Benutzername", color = Color.White) },
                     singleLine = true,
+                    textStyle = TextStyle(color = Color.White),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Yellow,
+                        unfocusedBorderColor = Color.White
+                    ),
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
                         .padding(top = 16.dp)
                         .fillMaxWidth()
                 )
 
-                TextField(
-                    value = emailState.value,
-                    onValueChange = { newText -> emailState.value = newText },
+                OutlinedTextField(
+                    value = emailState,
+                    onValueChange = {
+                        emailState = it
+                    },
 //                    label = { Text("E-Mail") },
-                    placeholder = { Text("E-Mail") },
+                    placeholder = { Text("E-Mail", color = Color.White) },
                     singleLine = true,
+                    textStyle = TextStyle(color = Color.White),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Yellow,
+                        unfocusedBorderColor = Color.White
+                    ),
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
                         .padding(top = 16.dp)
                         .fillMaxWidth()
                 )
-                TextField(
-                    value = passwordState.value,
-                    onValueChange = { newText -> passwordState.value = newText },
+                OutlinedTextField(
+                    value = passwordState,
+                    onValueChange = {
+                        passwordState = it
+                    },
 //                    label = { Text("Passwort") },
-                    placeholder = { Text("Passwort") },
+                    placeholder = { Text("Passwort", color = Color.White) },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
+                    textStyle = TextStyle(color = Color.White),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Yellow,
+                        unfocusedBorderColor = Color.White
+                    ),
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
                         .padding(top = 16.dp)
                         .fillMaxWidth()
                 )
-                TextField(
-                    value = repeatPasswordState.value,
-                    onValueChange = { repeatPasswordState.value = it },
+                OutlinedTextField(
+                    value = repeatPasswordState,
+                    onValueChange = { repeatPasswordState = it },
 //                    label = { Text("Passwort wiederholen") },
-                    placeholder = { Text("Passwort wiederholen") },
+                    placeholder = { Text("Passwort wiederholen", color = Color.White) },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
+                    textStyle = TextStyle(color = Color.White),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Yellow,
+                        unfocusedBorderColor = Color.White
+                    ),
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
                         .padding(top = 16.dp)
@@ -216,96 +296,91 @@ fun RegistrationScreen(navController: NavController) {
                         .fillMaxWidth(),
                     onClick = {
                         Log.d(TAG, "Attempting registration...")
-                        val user = User(
-                            id = 0,
-                            name = userNameState.value.text,
-                            email = emailState.value.text,
-                            password = passwordState.value.text
-                        )
-
-                        when {
-                            // Validierungen
-
-                            userNameState.value.text.isBlank() ->
-                                registrationError = RegistrationError.EMPTY_USERNAME
-                            emailState.value.text.isBlank() ->
-                                registrationError = RegistrationError.EMPTY_EMAIL
-                            passwordState.value.text.isBlank() ->
-                                registrationError = RegistrationError.EMPTY_PASSWORD
-                            passwordState.value.text != repeatPasswordState.value.text ->
-                                registrationError = RegistrationError.PASSWORD_MISMATCH
-                            userData.any { it.email == user.email } ->
-                                registrationError = RegistrationError.EMAIL_EXISTS
-                            userData.any { it.name == user.name } ->
-                                registrationError = RegistrationError.USERNAME_EXISTS
-                            !isValidEmail(user.email) ->
-                                registrationError = RegistrationError.INVALID_EMAIL
-                            else -> {
-                                // Registrierung erfolgreich
-                                Log.i(TAG, "Registration successful for user Id: ${user.id}")
-                               viewModel.addUser(user) // Fügt Benutzer hinzu
-//                                AuthManager.login(user) // Automatischer Login
-                                navController.navigate("ProfileScreen1/${user.id}") {
-                                    popUpTo(navController.graph.startDestinationId) {
-                                        inclusive = true
-                                    }
-                                }
+//                        signUp(auth, emailState, passwordState)
+                        if (emailState.isNotBlank() && passwordState.isNotBlank() && userNameState.isNotBlank() && repeatPasswordState.isNotBlank() && passwordState == repeatPasswordState) {
+                            viewModel.signUp(emailState, passwordState, userNameState)
+//                            userNameState = ""
+//                            emailState = ""
+//                            passwordState = ""
+//                            repeatPasswordState = ""
+                        } else if (passwordState != repeatPasswordState) {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Passwörter stimmen nicht überein")
+                            }
+                        } else {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Bitte alle Felder ausfühlen!")
                             }
                         }
+
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                ClickButton(
-                    text = "Abbrechen",
-                    onClick = {
-                        Log.d(TAG, "Registration cancelled, navigating to login")
-                        navController.navigate("LoginScreen")
-                              },
-                    modifier = Modifier
-                        .padding(horizontal = 120.dp)
-                        .fillMaxWidth()
-                )
+//                ClickButton(
+//                    text = "Account löschen",
+//                    onClick = {
+//                        showDeleteDialog = true
+//                    },
+//                    modifier = Modifier
+//                        .padding(horizontal = 120.dp)
+//                        .fillMaxWidth()
+//                )
+
+                // AlerDer Bestätigungsdialog
+                if (showDeleteDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showDeleteDialog = false },
+                        title = {
+                            Text(
+                                "Account löschen?",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        text = {
+                            Text(
+                                "Bist du sicher, dass du deinen Account unwiderruflich löschen möchtest? Deine Daten werden dauerhaft entfernt.",
+                                color = Color.White
+                            )
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    showDeleteDialog = false
+                                    viewModel.deleteAccount(emailState, passwordState)
+                                    userNameState = ""
+                                    emailState = ""
+                                    passwordState = ""
+                                    repeatPasswordState = ""
+                                }
+                            ) {
+                                Text("Ja, löschen", color = Color.White)
+                            }
+                        },
+                        dismissButton = {
+                            Button(
+                                onClick = { showDeleteDialog = false },
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                    containerColor = Color.Gray
+                                )
+                            ) {
+                                Text("Abbrechen", color = Color.White)
+                            }
+                        },
+                        containerColor = Color(0xFF1E1E1E),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                    )
+                }
             }
-            //MenuBar(navController)
         }
 
+
     }
-
+    //MenuBar(navController)
 }
 
 
 
 
 
-
-
-// Hilfsfunktion für E-Mail-Validierung mit Regex
-private fun isValidEmail(email: String): Boolean {
-    return Patterns.EMAIL_ADDRESS.matcher(email).matches() //vordefinierte Regex-Muster Patterns.EMAIL_ADDRESS
-}
-////Die Funktion isValidEmail verwendet ein Regex-Muster, um das Format der E-Mail zu prüfen.
-////Nur wenn das Muster passt, wird die Registrierung fortgesetzt.
-//
-//// Fehlertypen
-enum class RegistrationError(val message: String) {
-    EMPTY_USERNAME("Bitte Benutzernamen eingeben"),
-    EMPTY_EMAIL("Bitte E-Mail-Adresse eingeben"),
-    EMPTY_PASSWORD("Bitte Passwort eingeben"),
-    PASSWORD_MISMATCH("Passwörter stimmen nicht überein"),
-    EMAIL_EXISTS("E-Mail-Adresse bereits registriert"),
-    USERNAME_EXISTS("Benutzername bereits vergeben"),
-    INVALID_EMAIL("Ungültiges E-Mail-Format")
-}
-
-//Registrierungsflow:
-//
-//Prüfung aller Eingabefelder
-//Eindeutigkeitsprüfung von Email/Benutzername
-//Passwortmatch-Check
-//E-Mail-Formatvalidierung mit Android-internem Pattern
-//
-//Bei Erfolg:
-//Benutzer wird Repository hinzugefügt
-//Automatische Anmeldung
-//Persistenz durch saveUsers()

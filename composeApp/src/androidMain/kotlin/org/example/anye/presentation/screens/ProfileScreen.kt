@@ -31,92 +31,148 @@ import com.example.evoo.ui.components.button.EditIconButton
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import org.example.anye.data.EventTab
-import org.example.anye.data.sampleEvents
 import org.example.anye.ui.components.buttons.ClickButton
-import org.example.anye.ui.components.card.EventCard
 import org.example.anye.ui.menu.AnyeBottomBar
 import com.example.evoo.ui.theme.colorthemetype.BottomDarkBlue
 import com.example.evoo.ui.theme.colorthemetype.TopLightBlue
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.firestore
 import org.example.anye.viewmodels.Profile1ViewModel
 import org.example.anye.AccentColor
+import org.example.anye.ui.components.AuthStatusIndicator
+import org.example.anye.viewmodels.AuthResult
+import org.example.anye.viewmodels.LoginViewModel
 import org.koin.androidx.compose.koinViewModel
 
-private const val TAG = "ProfileScreen1"
+
 
 @Composable
-fun ProfileScreen1 (navController: NavController, userId: Int?) {
-//    var selectedTab by remember { mutableStateOf(EventTab.All) }
-//    val displayedEvents = when (selectedTab) {
-//        EventTab.All -> {
-//            Log.d(TAG, "Displaying all events")
-//            sampleEvents
-//        }
-//        EventTab.Favorites -> {
-//            Log.d(TAG, "Displaying favorite events")
-//            sampleEvents.take(2)
-//        }
-//        EventTab.Liked -> {
-//            Log.d(TAG, "Displaying liked events")
-//            sampleEvents.takeLast(2)
-//        }
-//    }
-    var name by remember { mutableStateOf("") }
+fun ProfileScreen (navController: NavController, userId: Int?) {
+
+    val viewModel: LoginViewModel = koinViewModel()
+    val user = FirebaseAuth.getInstance().currentUser
+    val firestore = Firebase.firestore
+    var userName by remember { mutableStateOf("") }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(user) {
+        user?.uid?.let { uid ->
+            firestore.collection("users").document(uid).get()
+                .addOnSuccessListener { doc ->
+                    userName = doc.getString("username") ?: user.email ?: ""
+                }
+        }
+    }
+
+    // Auf Events vom ViewModel hören
+    LaunchedEffect(Unit) {
+        viewModel.authResult.collect { result ->
+            when (result) {
+                is AuthResult.Success -> {
+                    snackbarHostState.showSnackbar(message = result.message)
+                    // Navigation nach erfolgreichem Logout
+                    navController.navigate("LoginScreen") {
+                        popUpTo("ProfileScreen") {
+                            inclusive = true
+                        } // verhindert zurück zur Login-Seite
+                    }
+                }
+
+                is AuthResult.Error -> {
+                    snackbarHostState.showSnackbar(message = result.message)
+                }
+
+                is AuthResult.Initial -> {
+                    // Nichts tun beim Start
+                }
+            }
+        }
+    }
+
 
     val itemsPerRow = 3
 
-    Log.d(TAG, "Profile screen loaded for user: $userId")
 
-    val viewModel: Profile1ViewModel = koinViewModel()
-    val userData by viewModel.users.collectAsState()
 
-    // Finde den User in der Repository
-    val user = userData.find { it.id == userId }
+    // Scaffold als Hauptcontainer verwenden
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                // Hole Farbe aus den SnackbarData-Extras
+                val background = when (data.visuals.message) {
+                    "Erfolgreich abgemeldet" -> Color(0xFF4CAF50) // Grün
+                    "E-Mail oder Passwort ist falsch" -> Color(0xFFF44336) // Rot
+                    else -> Color(0xFF2196F3) // Blau (Standard)
+                }
+                androidx.compose.material3.Snackbar(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    containerColor = background,
+                    contentColor = Color.White,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = data.visuals.message,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+        },
+        containerColor = AccentColor,
+    ) { paddingValues -> // paddingValues berücksichtigt die Systemleisten
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AccentColor)
-    ) {
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(WindowInsets.systemBars.asPaddingValues())
+                .padding(paddingValues)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(TopLightBlue, BottomDarkBlue)
                     )
                 )
         ) {
+            // Auth-Status oben rechts
+            AuthStatusIndicator(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
+            )
             Icon(
                 imageVector = Icons.Rounded.ArrowBack,
-                contentDescription = "Zurück",
+                contentDescription = "Back",
                 tint = Color.White,
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
                     .padding(24.dp)
                     .size(34.dp)
                     .clickable {
-                        Log.d(TAG, "Navigation: Returning to previous screen")
+                        Log.d("ProfileScreen", "Navigation: Returning to previous screen")
                         navController.popBackStack()
                     }
             )
@@ -131,9 +187,8 @@ fun ProfileScreen1 (navController: NavController, userId: Int?) {
                 Spacer(modifier = Modifier.height(50.dp))
 
                 // NameFeld
-
                 Text(
-                    text = "Willkommen ${user?.name}",
+                    text = "Willkommen $userName",
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     color = Color.White
@@ -144,7 +199,6 @@ fun ProfileScreen1 (navController: NavController, userId: Int?) {
 
 
                 //Profilbild mit Edit
-
                 Box(
                     modifier = Modifier
                         .size(100.dp)
@@ -177,18 +231,20 @@ fun ProfileScreen1 (navController: NavController, userId: Int?) {
 
                 ClickButton(
                     text = "Edit Profile",
-                    onClick = {},
+                    onClick = {
+                        navController.navigate("AccountScreen")
+                    },
                     modifier = Modifier
                 )
 
                 ClickButton(
                     text = "Abmelden",
                     onClick = {
-                        Log.i(TAG, "User logout initiated")
-//                        AuthManager.logout() //Zustand zurücksetzen
-                        navController.navigate("LoginScreen") {
-                            popUpTo("HomeScreen") { inclusive = true } //Löscht Back-Stack
-                        }
+                        viewModel.signOut()
+//                        FirebaseAuth.getInstance().signOut()
+//                        navController.navigate("LoginScreen") {
+//                            popUpTo("ProfileScreen") { inclusive = true }
+//                        }
                     }
                 )
 
@@ -242,7 +298,6 @@ fun ProfileScreen1 (navController: NavController, userId: Int?) {
 //                    }
                 }
             }
-            //MenuBar(navController)
             AnyeBottomBar(navController)
         }
 

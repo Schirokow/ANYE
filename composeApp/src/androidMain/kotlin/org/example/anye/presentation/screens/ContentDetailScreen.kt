@@ -45,11 +45,24 @@ import org.example.anye.ui.menu.AnyeBottomBar
 import coil.compose.AsyncImage
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
+import org.example.anye.data.MapDataHolder
+import org.example.anye.ui.components.AuthStatusIndicator
+import org.example.anye.viewmodels.ContentDetailAction
+import org.example.anye.viewmodels.FavoriteAction
 import org.example.anye.viewmodels.HomeViewModel
 import org.koin.androidx.compose.koinViewModel
+import java.net.URLEncoder
 
 
 @Composable
@@ -58,12 +71,26 @@ fun ContentDetailScreen(navController: NavController, id: String){
     Log.d(TAG, "Screen initialized with id: $id")
 
     val context = LocalContext.current
-
+    val snackbarHostState = remember { SnackbarHostState() }
     val viewModel: ContentDetailViewModel = koinViewModel()
 
     LaunchedEffect(id) {
         Log.d(TAG, "Loading festival for id: $id")
         viewModel.loadEvent(id)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.action.collect { action ->
+            when (action) {
+                is ContentDetailAction.Success -> {
+                    snackbarHostState.showSnackbar(action.message)
+                }
+                is ContentDetailAction.Error -> {
+                    snackbarHostState.showSnackbar(action.message)
+                }
+                ContentDetailAction.Initial -> Unit
+            }
+        }
     }
 
     val event by viewModel.event.collectAsState()
@@ -105,20 +132,53 @@ fun ContentDetailScreen(navController: NavController, id: String){
 
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AccentColor)
-    ) {
+    // Scaffold als Hauptcontainer verwenden
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                // Hole Farbe aus den SnackbarData-Extras
+                val background = when (data.visuals.message) {
+                    "Zu Favoriten hinzugefügt" -> Color(0xFF4CAF50)
+                    "Fehler beim laden von Event!" -> Color(0xFFF44336) // Rot
+                    "Fehler!" -> Color(0xFFF44336) // Rot
+                    else -> Color(0xFF2196F3) // Blau (Standard)
+                }
+                Snackbar(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    containerColor = background,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = data.visuals.message,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+        },
+        containerColor = AccentColor,
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(WindowInsets.systemBars.asPaddingValues())
+                .padding(paddingValues)
                 .background(brush = Brush.verticalGradient(colors = listOf(
                     TopLightBlue,
                     BottomDarkBlue
                 )))
         ) {
+
+            // Auth-Status oben rechts
+            AuthStatusIndicator(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
+            )
 
             Icon(
                 imageVector = Icons.Rounded.ArrowBack,
@@ -152,7 +212,36 @@ fun ContentDetailScreen(navController: NavController, id: String){
                 text = "Auf der Karte",
                 onClick = {
                     Log.d(TAG, "Navigating to location screen")
-                    navController.navigate("LocationScreen")
+                    MapDataHolder.shouldFollowUser = false // Follow aus
+
+                    // 1. Hole die Location-Daten aus dem Event-Objekt
+                    val venue = event?._embedded?.venues?.firstOrNull()
+                    val lat = venue?.location?.latitude
+                    val lng = venue?.location?.longitude
+
+                    // Hole den Event-Namen
+                    // (Wir nehmen "Event" als Fallback, falls der Name null ist)
+                    val eventName = event?.name ?: "Event"
+
+                    //  URL-Encoding für den Namen
+                    // Dies ist SEHR WICHTIG, damit Namen mit Leerzeichen (z.B. "Cool Event")
+                    // die Navigationsroute nicht zerstören.
+                    val encodedEventName = try {
+                        URLEncoder.encode(eventName, "UTF-8")
+                    } catch (e: Exception) {
+                        "Event" // Fallback
+                    }
+
+
+                    // 2. Prüfe, ob die Daten vorhanden sind
+                    if (lat != null && lng != null) {
+                        // 3. Navigiere mit den Koordinaten als Parameter
+                        navController.navigate("LocationScreen?lat=$lat&lng=$lng&eventName=$encodedEventName")
+                    } else {
+                        // Optional: Zeige eine Meldung, wenn keine Location vorhanden ist
+                        Log.w(TAG, "Keine Location-Daten für dieses Event verfügbar.")
+                        // Hier könntest du eine Snackbar anzeigen
+                    }
                           },
                 modifier = Modifier
                     .align(Alignment.TopCenter)
