@@ -24,9 +24,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.example.anye.data.TicketmasterImage
-import coil.compose.AsyncImage // Import für die AsyncImage-Komponente
+import coil.compose.AsyncImage
 import org.example.anye.R
+import org.example.anye.data.ticketmaster_data_classes.TicketmasterImage
 
 
 @Preview //(showBackground = true)

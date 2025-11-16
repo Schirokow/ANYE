@@ -51,6 +51,10 @@ kotlin {
 
             implementation("io.coil-kt:coil-compose:2.7.0")
 
+            // --- OSMDroid + BonusPack ---
+            implementation("org.osmdroid:osmdroid-android:6.1.20")
+            implementation("com.github.MKergall:osmbonuspack:6.9.0")
+
         }
         commonMain.dependencies {
             implementation(project(":shared"))
@@ -72,7 +76,9 @@ kotlin {
             //OpenStreetMap
             implementation (libs.core.ktx.v1120)
             implementation (libs.play.services.location)
-            implementation (libs.osmdroid.osmdroid.android)
+            // --- OSMDroid + BonusPack ---
+            implementation("org.osmdroid:osmdroid-android:6.1.20")
+            implementation("com.github.MKergall:osmbonuspack:6.9.0")
             implementation (libs.accompanist.permissions.v0320)
 
             implementation(libs.kotlinx.coroutines.core)

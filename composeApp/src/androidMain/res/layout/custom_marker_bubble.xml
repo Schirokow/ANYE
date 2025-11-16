@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/custom_bubble_layout"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="@drawable/bubble_background"
+    android:elevation="6dp">
+
+    <TextView
+        android:id="@+id/bubble_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Eventtitel"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/bubble_snippet"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Entfernung oder Info"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:paddingTop="2dp" />
+
+</LinearLayout>

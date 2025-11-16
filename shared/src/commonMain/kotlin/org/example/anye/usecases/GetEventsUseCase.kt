@@ -2,7 +2,7 @@ package org.example.anye.usecases
 
 import kotlinx.coroutines.flow.Flow
 import org.example.anye.data.EventsRepository
-import org.example.anye.data.TicketmasterEvent
+import org.example.anye.data.ticketmaster_data_classes.TicketmasterEvent
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 

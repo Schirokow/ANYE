@@ -1,6 +1,9 @@
 package org.example.anye.presentation.screens
 
+// Für Bildanzeige
+
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -10,27 +13,34 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.Send
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,28 +57,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-
-import org.example.anye.viewmodels.HomeViewModel
-import org.example.anye.ui.components.buttons.ClickButton
-import org.example.anye.ui.components.card.NewEventCard
-import org.example.anye.ui.menu.AnyeBottomBar
 import kotlinx.coroutines.launch
-
-// Für Bildanzeige
-
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.ui.text.TextStyle
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
-import org.example.anye.data.TicketmasterEvent
+import org.example.anye.data.MapDataHolder
+import org.example.anye.data.ticketmaster_data_classes.TicketmasterEvent
 import org.example.anye.ui.components.AuthStatusIndicator
+import org.example.anye.ui.components.buttons.ClickButton
+import org.example.anye.ui.components.card.NewEventCard
+import org.example.anye.ui.menu.AnyeBottomBar
+import org.example.anye.viewmodels.Action
+import org.example.anye.viewmodels.HomeViewModel
 import org.koin.androidx.compose.koinViewModel
 
 
@@ -82,19 +88,66 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
     var showDeleteDialog by remember { mutableStateOf(false) }
     val isLoading by viewModel.isLoading.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val eventsData by viewModel.eventsData.collectAsState()
     var city by remember {
         mutableStateOf("")
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AccentColor)
-    ) {
+    LaunchedEffect(Unit) {
+        viewModel.action.collect { action ->
+            when (action) {
+                is Action.Success -> {
+                    snackbarHostState.showSnackbar(action.message)
+                }
+
+                is Action.Error -> {
+                    snackbarHostState.showSnackbar(action.message)
+                }
+
+                Action.Initial -> Unit
+            }
+        }
+    }
+
+    // Scaffold als Hauptcontainer verwenden
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                // Hole Farbe aus den SnackbarData-Extras
+                val background = when (data.visuals.message) {
+                    "Events erfolgreich geladen" -> Color(0xFF4CAF50) // Grün
+                    "Zu Favoriten hinzugefügt" -> Color(0xFF4CAF50) // Grün
+                    "Fehler beim Laden der Events" -> Color(0xFFF44336) // Rot
+                    "Fehler beim Löschen!" -> Color(0xFFF44336) // Rot
+                    "Fehler beim Favorisieren!" -> Color(0xFFF44336) // Rot
+                    else -> Color(0xFF2196F3) // Blau (Standard)
+                }
+                Snackbar(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    containerColor = background,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = data.visuals.message,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+        },
+        containerColor = AccentColor,
+    ) { paddingValues ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(WindowInsets.systemBars.asPaddingValues()) // Eine Function um den Content unter der Status Bar anzuzeigen.
+                .padding(paddingValues)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
@@ -108,7 +161,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
             AuthStatusIndicator(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(24.dp)
+                    .padding(4.dp)
             )
 
             Column(
@@ -116,44 +169,74 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
                     .fillMaxWidth()
                     .padding(top = 25.dp)
             ) {
-                OutlinedTextField(
-                    value = city,
-                    singleLine = true,
-                    placeholder = { Text("Stadt eingeben", color = Color.White) },
-                    textStyle = TextStyle(color = Color.White),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.Yellow,
-                        unfocusedBorderColor = Color.White
-                    ),
-                    onValueChange = { city = it },
-                    modifier = Modifier.padding(start = 65.dp)
-                )
                 Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ClickButton(
-                        text = "Laden",
-                        onClick = {
-                            if (city.isNotBlank()) {
+                    OutlinedTextField(
+                        value = city,
+                        singleLine = true,
+                        placeholder = { Text("Stadt eingeben", color = Color.White) },
+                        textStyle = TextStyle(color = Color.White),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Yellow,
+                            unfocusedBorderColor = Color.White
+                        ),
+                        onValueChange = { city = it },
+                        modifier = Modifier.padding(start = 65.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Icon(
+                        imageVector = Icons.Rounded.Send,
+                        contentDescription = "Add",
+                        tint = Color.Blue,
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clickable {
+                                if (city.isNotBlank()) {
 //                            viewModel.loadAllFestivals()
-                                viewModel.loadAllEvents(city)
-                                city = ""
+                                    viewModel.loadAllEvents(city)
+                                    city = ""
+                                }
                             }
-
-                        },
-                        modifier = Modifier.width(150.dp)
                     )
+                }
 
-                    ClickButton(
-                        text = "Löschen",
-                        onClick = { showDeleteDialog = true },
-                        modifier = Modifier.width(150.dp)
-                    )
+                AnimatedVisibility(
+                    visible = eventsData.isNotEmpty() && !isLoading
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ClickButton(
+                            text = "Auf der Karte",
+                            onClick = {
+                                // 1. Speichere die aktuelle Event-Liste im Holder
+                                // (eventsData ist die Variable aus deinem HomeScreen-Scope)
+                                MapDataHolder.events = eventsData
+                                MapDataHolder.shouldFollowUser = false // Follow aus
 
+                                Log.d(TAG, "Navigiere zur Karte mit ${eventsData.size} Events.")
+
+                                // 2. Navigiere zum LocationScreen OHNE Parameter
+                                navController.navigate("LocationScreen")
+
+                            },
+                            modifier = Modifier.width(150.dp)
+                        )
+
+                        ClickButton(
+                            text = "Löschen",
+                            onClick = { showDeleteDialog = true },
+                            modifier = Modifier.width(150.dp)
+                        )
+
+                    }
                 }
 
             }
@@ -186,24 +269,45 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Alle Events löschen?") },
-            text = { Text("Möchtest du wirklich alle Events aus der Liste löschen? Favoriten bleiben erhalten.") },
+            title = {
+                Text(
+                    "Alle Events löschen?",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    "Möchtest du wirklich alle Events aus der Liste löschen? Favoriten bleiben erhalten.",
+                    color = Color.White
+                )
+            },
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.deleteAllEvents()
                         showDeleteDialog = false
+                        viewModel.deleteAllEvents()
                         Log.d(TAG, "All events deleted")
-                    }
+                    },
+                    colors = buttonColors(
+                        containerColor = Color.Red
+                    )
                 ) {
-                    Text("Löschen")
+                    Text("Ja, löschen", color = Color.White)
                 }
             },
             dismissButton = {
-                Button(onClick = { showDeleteDialog = false }) {
-                    Text("Abbrechen")
+                Button(
+                    onClick = { showDeleteDialog = false },
+                    colors = buttonColors(
+                        containerColor = Color.Blue
+                    )
+                ) {
+                    Text("Abbrechen", color = Color.White)
                 }
-            }
+            },
+            containerColor = Color(0xFF1E1E1E),
+            shape = RoundedCornerShape(16.dp)
         )
     }
 }

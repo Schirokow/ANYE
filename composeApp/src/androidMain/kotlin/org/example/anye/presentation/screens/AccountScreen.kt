@@ -147,7 +147,7 @@ fun AccountScreen(navController: NavController) {
             AuthStatusIndicator(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(24.dp)
+                    .padding(4.dp)
             )
 
             Row(
@@ -322,7 +322,7 @@ fun AccountScreen(navController: NavController) {
                             Button(
                                 onClick = { showDeleteDialog = false },
                                 colors = buttonColors(
-                                    containerColor = Color.Green
+                                    containerColor = Color.Blue
                                 )
                             ) {
                                 Text("Abbrechen", color = Color.White)
