@@ -85,8 +85,9 @@ kotlin {
             implementation(kotlin("test"))
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
-            implementation("org.junit.jupiter:junit-jupiter:6.0.0")
+            implementation("org.junit.jupiter:junit-jupiter:6.0.1")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+            implementation("io.ktor:ktor-client-mock:3.3.2")
         }
     }
 }
