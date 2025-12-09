@@ -223,7 +223,10 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
                 ) {
                     EditIconButton(
                         modifier = Modifier
-                            .size(24.dp)
+                            .size(24.dp),
+                        onClick = {
+                            navController.navigate("AccountScreen")
+                        }
 
                     )
                 }
@@ -231,9 +234,9 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
                 Spacer(modifier = Modifier.height(5.dp))
 
                 ClickButton(
-                    text = "Edit Profile",
+                    text = "Event Erstellen",
                     onClick = {
-                        navController.navigate("AccountScreen")
+                        navController.navigate("CreateEventScreen")
                     },
                     modifier = Modifier
                 )

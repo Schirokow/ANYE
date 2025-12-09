@@ -33,6 +33,7 @@ import androidx.navigation.navArgument
 import com.google.firebase.auth.FirebaseAuth
 import org.example.anye.presentation.screens.AccountScreen
 import org.example.anye.presentation.screens.ContentDetailScreen
+import org.example.anye.presentation.screens.CreateEventScreen
 import org.example.anye.presentation.screens.FavoriteScreen
 import org.example.anye.presentation.screens.HomeScreen
 import org.example.anye.presentation.screens.LocationScreen
@@ -92,6 +93,10 @@ fun Navigation() {
         composable("SettingScreen") {
             Log.d(TAG, "Navigating to SettingScreen")
             SettingScreen(navController)
+        }
+        composable("CreateEventScreen") {
+            Log.d(TAG, "Navigating to CreateEventScreen")
+            CreateEventScreen(navController)
         }
         composable("FavoriteScreen") {
             Log.d(TAG, "Navigating to FavoriteScreen")
