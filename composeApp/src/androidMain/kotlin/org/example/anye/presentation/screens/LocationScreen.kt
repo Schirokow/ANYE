@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.LocationOn
@@ -123,7 +124,7 @@ fun LocationScreen(
             )
 
             Icon(
-                imageVector = Icons.Rounded.ArrowBack,
+                imageVector = Icons.Rounded.ArrowBackIosNew,
                 contentDescription = "Back",
                 tint = BottomDarkBlue,
                 modifier = Modifier

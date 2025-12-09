@@ -38,6 +38,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -164,7 +165,7 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
                     .padding(4.dp)
             )
             Icon(
-                imageVector = Icons.Rounded.ArrowBack,
+                imageVector = Icons.Rounded.ArrowBackIosNew,
                 contentDescription = "Back",
                 tint = Color.White,
                 modifier = Modifier

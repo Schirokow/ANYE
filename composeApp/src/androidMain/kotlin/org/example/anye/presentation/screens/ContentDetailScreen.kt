@@ -46,6 +46,7 @@ import coil.compose.AsyncImage
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -116,7 +117,7 @@ fun ContentDetailScreen(navController: NavController, id: String){
                     verticalAlignment = Alignment.CenterVertically
                 ){
                     Icon(
-                        imageVector = Icons.Rounded.ArrowBack,
+                        imageVector = Icons.Rounded.ArrowBackIosNew,
                         contentDescription = "Zurück",
                         tint = Color.White,
                         modifier = Modifier
@@ -181,7 +182,7 @@ fun ContentDetailScreen(navController: NavController, id: String){
             )
 
             Icon(
-                imageVector = Icons.Rounded.ArrowBack,
+                imageVector = Icons.Rounded.ArrowBackIosNew,
                 contentDescription = "Zurück",
                 tint = Color.White,
                 modifier = Modifier
