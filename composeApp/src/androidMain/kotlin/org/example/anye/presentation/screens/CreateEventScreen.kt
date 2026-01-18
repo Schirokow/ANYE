@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -47,10 +48,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
+import org.example.anye.data.Event
+import org.example.anye.data.Location
 import org.example.anye.ui.components.AuthStatusIndicator
 import org.example.anye.ui.components.buttons.ClickButton
 import org.example.anye.viewmodels.AuthResult
@@ -64,7 +70,10 @@ fun CreateEventScreen(navController: NavController) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    var titelState by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val fs = Firebase.firestore
+
+    var titleState by remember { mutableStateOf("") }
     var descriptionState by remember { mutableStateOf("") }
     var locationState by remember { mutableStateOf("") }
     var dataState by remember { mutableStateOf("") }
@@ -208,11 +217,10 @@ fun CreateEventScreen(navController: NavController) {
 
 
                 OutlinedTextField(
-                    value = titelState,
+                    value = titleState,
                     onValueChange = {
-                        titelState = it
+                        titleState = it
                     },
-//                    label = { Text("E-Mail") },
                     placeholder = { Text("Titel", color = Color.White) },
                     singleLine = true,
                     textStyle = TextStyle(color = Color.White),
@@ -230,9 +238,7 @@ fun CreateEventScreen(navController: NavController) {
                     onValueChange = {
                         descriptionState = it
                     },
-//                    label = { Text("Passwort") },
                     placeholder = { Text("Beschreibung", color = Color.White) },
-                    visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
                     textStyle = TextStyle(color = Color.White),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -247,9 +253,7 @@ fun CreateEventScreen(navController: NavController) {
                 OutlinedTextField(
                     value = locationState,
                     onValueChange = { locationState = it },
-//                    label = { Text("Passwort wiederholen") },
-                    placeholder = { Text("Location", color = Color.White) },
-                    visualTransformation = PasswordVisualTransformation(),
+                    placeholder = { Text("Ort", color = Color.White) },
                     singleLine = true,
                     textStyle = TextStyle(color = Color.White),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -264,9 +268,7 @@ fun CreateEventScreen(navController: NavController) {
                 OutlinedTextField(
                     value = dataState,
                     onValueChange = { dataState = it },
-//                    label = { Text("Passwort wiederholen") },
                     placeholder = { Text("Startdatum", color = Color.White) },
-                    visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
                     textStyle = TextStyle(color = Color.White),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -286,7 +288,7 @@ fun CreateEventScreen(navController: NavController) {
                 ClickButton(
                     text = "Event Erstellen",
                     onClick = {
-                        if (titelState.isNotBlank() && descriptionState.isNotBlank() && locationState.isNotBlank() && dataState.isNotBlank()) {
+                        if (titleState.isNotBlank() && descriptionState.isNotBlank() && locationState.isNotBlank() && dataState.isNotBlank()) {
                             showDeleteDialog = true
                         }  else {
                             scope.launch {
@@ -320,8 +322,13 @@ fun CreateEventScreen(navController: NavController) {
                         confirmButton = {
                             Button(
                                 onClick = {
+                                    saveEvent(fs = fs, title = titleState, description = descriptionState, start = dataState, city = locationState)
+                                    titleState = ""
+                                    descriptionState = ""
+                                    dataState = ""
+                                    locationState = ""
                                     showDeleteDialog = false
-//                                    viewModel.deleteAccount(emailState, passwordState)
+
 
                                 },
                                 colors = buttonColors(
@@ -353,4 +360,19 @@ fun CreateEventScreen(navController: NavController) {
         }
     }
 
+}
+
+private fun saveEvent(fs: FirebaseFirestore, title: String, description: String, city: String, start: String){
+    fs.collection("events")
+        .document().set(
+            Event(
+                userId = "2",
+                imageUrl = "TestUrl",
+                title = title,
+                description = description,
+                city = city,
+                startData = start,
+                location = Location("100", "200")
+            )
+        )
 }

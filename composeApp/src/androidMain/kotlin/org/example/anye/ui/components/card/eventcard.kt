@@ -30,81 +30,81 @@ import androidx.compose.ui.unit.sp
 import org.example.anye.R
 
 
-@Preview //(showBackground = true)
-@Composable
-fun PreviewEventCard(){
-    val event = Event(
-        title = "Smooth Sound",
-        date = "05.05.2025, 20:25 Uhr" ,
-        description = "Free Entry - All Welcome",
-        imageResId = R.drawable.festival1
-    )
-    EventCard(
-        event = event,
-        onClick = {} ,
-        isLarge = true
-    )
-}
-
-@Composable
-fun EventCard(
-    event : Event,
-    modifier : Modifier = Modifier,
-    onClick: () -> Unit,
-    isLarge : Boolean = false,
-){
-
-val cardSize = if (isLarge) 200.dp else 100.dp
-val imageToUse = event.imageResId ?: R.drawable.festival1
-
-    Card(
-            shape = RoundedCornerShape(8.dp),
-            elevation = CardDefaults.cardElevation(4.dp),
-            modifier = modifier
-                .size(cardSize)
-                //.fillMaxWidth()
-                //.aspectRatio(1f)
-                .clickable(onClick = onClick)
-        ){
-            Box{
-                Image(
-                    painter = painterResource(id = imageToUse),
-                    contentDescription = event.title,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.Black.copy(alpha = 0.5f))
-                        .align(Alignment.BottomStart)
-                ){
-                    Column(
-                        modifier = Modifier.padding(8.dp)
-                    ){
-                    Text(
-                    text = event.title,
-                    color = Color.White,
-                    fontSize = if (isLarge) 14.sp else 10.sp
-                    )
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = event.date ?: "No Date",
-                            color = Color.White,
-                            fontSize = if (isLarge) 12.sp else 8.sp
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        //Text(
-                          //  text = event.description,
-                            //color = Color.White,
-                            //fontSize = if (isLarge) 12.sp else 8.sp
-                              //  )
-
-                }
-
-            }
-        }
-        }
-}
+//@Preview //(showBackground = true)
+//@Composable
+//fun PreviewEventCard(){
+//    val event = Event(
+//        title = "Smooth Sound",
+//        date = "05.05.2025, 20:25 Uhr" ,
+//        description = "Free Entry - All Welcome",
+//        imageResId = R.drawable.festival1
+//    )
+//    EventCard(
+//        event = event,
+//        onClick = {} ,
+//        isLarge = true
+//    )
+//}
+//
+//@Composable
+//fun EventCard(
+//    event : Event,
+//    modifier : Modifier = Modifier,
+//    onClick: () -> Unit,
+//    isLarge : Boolean = false,
+//){
+//
+//val cardSize = if (isLarge) 200.dp else 100.dp
+//val imageToUse = event.imageResId ?: R.drawable.festival1
+//
+//    Card(
+//            shape = RoundedCornerShape(8.dp),
+//            elevation = CardDefaults.cardElevation(4.dp),
+//            modifier = modifier
+//                .size(cardSize)
+//                //.fillMaxWidth()
+//                //.aspectRatio(1f)
+//                .clickable(onClick = onClick)
+//        ){
+//            Box{
+//                Image(
+//                    painter = painterResource(id = imageToUse),
+//                    contentDescription = event.title,
+//                    contentScale = ContentScale.Crop,
+//                    modifier = Modifier.fillMaxSize()
+//                )
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .background(Color.Black.copy(alpha = 0.5f))
+//                        .align(Alignment.BottomStart)
+//                ){
+//                    Column(
+//                        modifier = Modifier.padding(8.dp)
+//                    ){
+//                    Text(
+//                    text = event.title,
+//                    color = Color.White,
+//                    fontSize = if (isLarge) 14.sp else 10.sp
+//                    )
+//                        Spacer(modifier = Modifier.height(4.dp))
+//
+//                        Text(
+//                            text = event.date ?: "No Date",
+//                            color = Color.White,
+//                            fontSize = if (isLarge) 12.sp else 8.sp
+//                        )
+//                        Spacer(modifier = Modifier.height(4.dp))
+//
+//                        //Text(
+//                          //  text = event.description,
+//                            //color = Color.White,
+//                            //fontSize = if (isLarge) 12.sp else 8.sp
+//                              //  )
+//
+//                }
+//
+//            }
+//        }
+//        }
+//}
