@@ -47,7 +47,7 @@ fun PreviewEventCard(){
     EventCard(
         event = event,
         onClick = {} ,
-        isLarge = true
+        isLarge = false
     )
 }
 
@@ -57,11 +57,11 @@ fun EventCard(
     modifier : Modifier = Modifier,
     onClick: () -> Unit,
     isLarge : Boolean = false,
+    textIsLarge: Boolean = false
 ){
 
 val cardSize = if (isLarge) 200.dp else 100.dp
 val imageToLoad = event.imageUrl
-val fallbackImage = R.drawable.festival1 // Lokales Fallback-Bild
 
     Card(
             shape = RoundedCornerShape(16.dp),
@@ -74,18 +74,13 @@ val fallbackImage = R.drawable.festival1 // Lokales Fallback-Bild
         ){
             Box{
                 // Verwende AsyncImage, um das Bild von der URL zu laden
-                if (imageToLoad != null) {
+                if (!imageToLoad.isNullOrBlank()) {
                     AsyncImage(
-                        model = imageToLoad,
+                        model = event.imageUrl,
                         contentDescription = event.title,
-                        contentScale = ContentScale.FillBounds,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    // Zeige das Fallback-Bild an, wenn keine URL vorhanden ist
-                    Image(
-                        painter = painterResource(id = fallbackImage),
-                        contentDescription = event.title,
+                        fallback = painterResource(R.drawable.img),
+                        error = painterResource(R.drawable.img),
+                        placeholder = painterResource(R.drawable.img),
                         contentScale = ContentScale.FillBounds,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -99,19 +94,18 @@ val fallbackImage = R.drawable.festival1 // Lokales Fallback-Bild
                     Column(
                         modifier = Modifier.padding(8.dp)
                     ){
-                    event.title?.let {
                         Text(
-                            text = it,
+                            text = event.title ?: "No Title",
                             color = Color.White,
-                            fontSize = if (isLarge) 34.sp else 10.sp
+                            fontSize = if (textIsLarge) 34.sp else 10.sp
                         )
-                    }
+
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
                             text = event.startData ?: "No Date",
                             color = Color.White,
-                            fontSize = if (isLarge) 22.sp else 8.sp
+                            fontSize = if (textIsLarge) 22.sp else 8.sp
                         )
                         Spacer(modifier = Modifier.height(4.dp))
 

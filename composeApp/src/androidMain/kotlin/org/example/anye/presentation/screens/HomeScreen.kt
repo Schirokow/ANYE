@@ -1,7 +1,5 @@
 package org.example.anye.presentation.screens
 
-// Für Bildanzeige
-
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -64,14 +62,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
+import org.example.anye.data.Event
 import org.example.anye.data.MapDataHolder
 import org.example.anye.data.ticketmaster_data_classes.TicketmasterEvent
 import org.example.anye.ui.components.AuthStatusIndicator
 import org.example.anye.ui.components.buttons.ClickButton
+import org.example.anye.ui.components.card.EventCard
 import org.example.anye.ui.components.card.NewEventCard
 import org.example.anye.ui.menu.AnyeBottomBar
 import org.example.anye.viewmodels.Action
@@ -79,7 +81,6 @@ import org.example.anye.viewmodels.HomeViewModel
 import org.koin.androidx.compose.koinViewModel
 
 
-// Startseite
 @Composable
 fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinViewModel()) {
     val TAG = "HomeScreen"
@@ -93,6 +94,11 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
     val eventsData by viewModel.eventsData.collectAsState()
     var city by remember {
         mutableStateOf("")
+    }
+
+    val db = Firebase.firestore
+    var firestoreList by remember {
+        mutableStateOf(emptyList<Event>())
     }
 
     LaunchedEffect(Unit) {
@@ -196,7 +202,17 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
                             .size(34.dp)
                             .clickable {
                                 if (city.isNotBlank()) {
-//                            viewModel.loadAllFestivals()
+
+                                    db.collection("events")
+                                        .whereEqualTo("city", city)
+                                        .get()
+                                        .addOnSuccessListener { result ->
+                                            // Hier laden wir die Daten direkt in unsere neue Liste
+                                            firestoreList = result.toObjects(Event::class.java)
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Log.e("Firestore", "Fehler: ${e.message}")
+                                        }
                                     viewModel.loadAllEvents(city)
                                     city = ""
                                 }
@@ -205,7 +221,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
                 }
 
                 AnimatedVisibility(
-                    visible = eventsData.isNotEmpty() && !isLoading
+                    visible = eventsData.isNotEmpty() || firestoreList.isNotEmpty() && !isLoading
                 ) {
                     Row(
                         modifier = Modifier
@@ -259,7 +275,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
 
                 else -> {
                     // Funktion für die Vorschau.
-                    EventContent(navController)
+                    EventContent(navController,firestoreEvents = firestoreList)
                 }
             }
 
@@ -288,6 +304,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
                     onClick = {
                         showDeleteDialog = false
                         viewModel.deleteAllEvents()
+                        firestoreList = emptyList()
                         Log.d(TAG, "All events deleted")
                     },
                     colors = buttonColors(
@@ -315,7 +332,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
 
 
 @Composable
-fun EventContent(navController: NavController, viewModel: HomeViewModel = koinViewModel()) {
+fun EventContent(navController: NavController, viewModel: HomeViewModel = koinViewModel(), firestoreEvents: List<Event>) {
 
     val TAG = "EventContent"
 //    val viewModel: HomeViewModel = koinViewModel()
@@ -334,7 +351,7 @@ fun EventContent(navController: NavController, viewModel: HomeViewModel = koinVi
 
     // Schutz vor leeren Listen
     if (
-        eventsDataList.isEmpty()
+        eventsDataList.isEmpty() && firestoreEvents.isEmpty()
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Keine Events geladen", color = Color.White, fontSize = 20.sp)
@@ -362,6 +379,26 @@ fun EventContent(navController: NavController, viewModel: HomeViewModel = koinVi
         ),
         columns = GridCells.Fixed(2)
     ) {
+        // Zuerst Firestore Events anzeigen
+        items(firestoreEvents.size) { index ->
+            val event = firestoreEvents[index]
+            Box(
+                modifier = Modifier
+                    .padding(6.dp)
+                    .aspectRatio(1f)
+            ) {
+                EventCard(
+                    event = event,
+                    modifier = Modifier,
+                    onClick = {},
+                    isLarge = true,
+                    textIsLarge = false
+                )
+            }
+
+        }
+
+
         itemsIndexed(eventsDataList) { index, event ->
 
             Box(

@@ -332,7 +332,7 @@ fun CreateEventScreen(navController: NavController) {
 
                                 },
                                 colors = buttonColors(
-                                    containerColor = Color.Red
+                                    containerColor = Color.Green
                                 )
                             ) {
                                 Text("Ja, erstellen", color = Color.White)
@@ -353,13 +353,8 @@ fun CreateEventScreen(navController: NavController) {
                     )
                 }
             }
-
-
-            // Menu Bar
-//            MenuBar(navController)
         }
     }
-
 }
 
 private fun saveEvent(fs: FirebaseFirestore, title: String, description: String, city: String, start: String){
