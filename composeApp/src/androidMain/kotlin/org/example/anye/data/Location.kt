@@ -1,13 +1,12 @@
 package org.example.anye.data
 
 import androidx.annotation.Keep
+import com.google.firebase.firestore.IgnoreExtraProperties
 
 @Keep
+@IgnoreExtraProperties
 data class Location(
-    val longitude: String? = null,
-    val latitude: String? = null
-){
-    // Manueller leerer Konstruktor für Firebase
-    constructor() : this(null, null)
-}
+    var longitude: String? = null,
+    var latitude: String? = null
+)
 
