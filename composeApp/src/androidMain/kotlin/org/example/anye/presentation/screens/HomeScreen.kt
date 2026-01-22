@@ -207,7 +207,6 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
                                         .whereEqualTo("city", city)
                                         .get()
                                         .addOnSuccessListener { result ->
-                                            // Hier laden wir die Daten direkt in unsere neue Liste
                                             firestoreList = result.toObjects(Event::class.java)
                                         }
                                         .addOnFailureListener { e ->
@@ -362,7 +361,14 @@ fun EventContent(navController: NavController, viewModel: HomeViewModel = koinVi
     // State, um ausgewählte EventData zu speichern
     var selectedEventData by remember {
         mutableStateOf<TicketmasterEvent?>(null).also {
-            Log.d(TAG, "Selected festival state initialized")
+            Log.d(TAG, "Selected Ticketmaster Event state initialized")
+        }
+    }
+
+    // State, um augewählte Firestore Events zu speichern
+    var selectedFirestoreEvent by remember {
+        mutableStateOf<Event?>(null).also {
+            Log.d(TAG, "Selected Firestore Event state initialized")
         }
     }
 
@@ -390,7 +396,9 @@ fun EventContent(navController: NavController, viewModel: HomeViewModel = koinVi
                 EventCard(
                     event = event,
                     modifier = Modifier,
-                    onClick = {},
+                    onClick = {
+                        selectedFirestoreEvent = event
+                    },
                     isLarge = true,
                     textIsLarge = false
                 )
@@ -427,6 +435,11 @@ fun EventContent(navController: NavController, viewModel: HomeViewModel = koinVi
 
     val animateScale by animateFloatAsState(
         targetValue = if (selectedEventData != null) 1f else 0.5f,
+        animationSpec = tween(durationMillis = 400)
+    )
+
+    val animateScaleFirestoreEvent by animateFloatAsState(
+        targetValue = if (selectedFirestoreEvent != null) 1f else 0.5f,
         animationSpec = tween(durationMillis = 400)
     )
 
@@ -499,6 +512,74 @@ fun EventContent(navController: NavController, viewModel: HomeViewModel = koinVi
                 //Der Favoritenstatus wird mit favoriteStates (eine mutableStateMapOf) dynamisch geladen, um UI-Reaktivität zu gewährleisten.
                 //LaunchedEffect lädt den Favoritenstatus für jedes Festival beim Rendern.
                 //Der Favoriten-Button toggelt den Status und aktualisiert favoriteStates.
+            }
+
+        }
+    }
+
+    selectedFirestoreEvent?.let { event ->
+//        Log.d(TAG, "Showing detail overlay for id: ${event.id}")
+
+        Surface(
+            color = BackgroundColor.copy(alpha = 0.9f), // Farbe von Hintergrund
+            modifier = Modifier.fillMaxSize(),
+            onClick = { /*selectedEventData = null */ } // Klick außerhalb schließt das Overlay
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 100.dp),
+//                        .align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    EventCard(
+                        event = event,
+                        modifier = Modifier
+                            .graphicsLayer(scaleX = animateScaleFirestoreEvent, scaleY = animateScaleFirestoreEvent)
+                            .fillMaxWidth(0.9f)
+//                            .fillMaxHeight(0.5f)
+                            .height(300.dp),
+                        onClick = {
+
+                        },
+                        isLarge = true,
+                        textIsLarge = true
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.Rounded.ArrowBackIosNew,
+                    contentDescription = "Close",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .align(alignment = Alignment.TopStart)
+                        .padding(24.dp)
+                        .size(34.dp)
+                        .clickable {
+                            Log.d(TAG, "Close button clicked, hiding detail view")
+                            selectedFirestoreEvent = null
+                        }
+                )
+
+//                Icon(
+//                    imageVector = if (favoriteStates[event.id] == true) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+//                    contentDescription = "Favorite",
+//                    tint = if (favoriteStates[event.id] == true) Color.Yellow else Color.White,
+//                    modifier = Modifier
+//                        .align(alignment = Alignment.TopEnd)
+//                        .padding(24.dp)
+//                        .size(34.dp)
+//                        .clickable {
+//                            Log.i(TAG, "Favorite button clicked for id: ${event.id}")
+//                            viewModel.toggleFavorite(event)
+//                            favoriteStates[event.id] = !(favoriteStates[event.id] ?: false)
+//                        }
+//                )
+
             }
 
         }

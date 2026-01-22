@@ -33,91 +33,86 @@ import org.example.anye.R
 
 @Preview //(showBackground = true)
 @Composable
-fun PreviewEventCard(){
+fun PreviewEventCard() {
     val event = Event(
         userId = "1",
         imageUrl = "",
         title = "Smooth Sound",
         description = "Free Entry - All Welcome",
-        startData = "05.05.2025" ,
+        startData = "05.05.2025",
         city = "Stuttgart",
         location = null
 
     )
     EventCard(
         event = event,
-        onClick = {} ,
+        onClick = {},
         isLarge = false
     )
 }
 
 @Composable
 fun EventCard(
-    event : Event,
-    modifier : Modifier = Modifier,
+    event: Event,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
-    isLarge : Boolean = false,
+    isLarge: Boolean = false,
     textIsLarge: Boolean = false
-){
+) {
 
-val cardSize = if (isLarge) 200.dp else 100.dp
-val imageToLoad = event.imageUrl
+    val cardSize = if (isLarge) 200.dp else 100.dp
+    val imageToLoad = event.imageUrl
 
     Card(
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(12.dp),
-            modifier = modifier
-                .size(cardSize)
-                //.fillMaxWidth()
-                //.aspectRatio(1f)
-                .clickable(onClick = onClick)
-        ){
-            Box{
-                // Verwende AsyncImage, um das Bild von der URL zu laden
-                if (!imageToLoad.isNullOrBlank()) {
-                    AsyncImage(
-                        model = event.imageUrl,
-                        contentDescription = event.title,
-                        fallback = painterResource(R.drawable.img),
-                        error = painterResource(R.drawable.img),
-                        placeholder = painterResource(R.drawable.img),
-                        contentScale = ContentScale.FillBounds,
-                        modifier = Modifier.fillMaxSize()
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(12.dp),
+        modifier = modifier
+            .size(cardSize)
+            //.fillMaxWidth()
+            //.aspectRatio(1f)
+            .clickable(onClick = onClick)
+    ) {
+        Box {
+            // Verwende AsyncImage, um das Bild von der URL zu laden
+            if (!imageToLoad.isNullOrBlank()) {
+                AsyncImage(
+                    model = event.imageUrl,
+                    contentDescription = event.title,
+                    fallback = painterResource(R.drawable.img),
+                    error = painterResource(R.drawable.img),
+                    placeholder = painterResource(R.drawable.img),
+                    contentScale = ContentScale.FillBounds,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Black.copy(alpha = 0.5f))
+                    .align(Alignment.BottomStart)
+            ) {
+                Column(
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Text(
+                        text = event.title ?: "No Title",
+                        color = Color.White,
+                        fontSize = if (textIsLarge) 34.sp else 10.sp
                     )
-                }
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.Black.copy(alpha = 0.5f))
-                        .align(Alignment.BottomStart)
-                ){
-                    Column(
-                        modifier = Modifier.padding(8.dp)
-                    ){
-                        Text(
-                            text = event.title ?: "No Title",
-                            color = Color.White,
-                            fontSize = if (textIsLarge) 34.sp else 10.sp
-                        )
 
-                        Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
-                        Text(
-                            text = event.startData ?: "No Date",
-                            color = Color.White,
-                            fontSize = if (textIsLarge) 22.sp else 8.sp
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = event.startData ?: "No Date",
+                        color = Color.White,
+                        fontSize = if (textIsLarge) 22.sp else 8.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
 
-                        //Text(
-                          //  text = event.description,
-                            //color = Color.White,
-                            //fontSize = if (isLarge) 12.sp else 8.sp
-                              //  )
 
                 }
 
             }
         }
-        }
+    }
 }
