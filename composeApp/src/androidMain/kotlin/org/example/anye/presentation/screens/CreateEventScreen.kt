@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
@@ -72,6 +73,7 @@ fun CreateEventScreen(navController: NavController) {
 
     val context = LocalContext.current
     val fs = Firebase.firestore
+    val currentUser = FirebaseAuth.getInstance().currentUser
 
     var titleState by remember { mutableStateOf("") }
     var descriptionState by remember { mutableStateOf("") }
@@ -328,6 +330,7 @@ fun CreateEventScreen(navController: NavController) {
                                         description = descriptionState,
                                         start = dataState,
                                         city = locationState,
+                                        userId = currentUser?.uid ?: "",
                                         snackbarHostState = snackbarHostState,
                                         scope = scope
                                     )
@@ -371,6 +374,7 @@ private fun saveEvent(
     description: String,
     city: String,
     start: String,
+    userId: String,
     snackbarHostState: SnackbarHostState? = null,
     scope: kotlinx.coroutines.CoroutineScope? = null
 ){
@@ -382,8 +386,8 @@ private fun saveEvent(
     // Erstelle das Event-Objekt MIT der ID
     val event = Event(
         id = documentId, // WICHTIG: ID hier setzen
-        userId = "2",
-        imageUrl = "TestUrl",
+        userId = userId,
+        imageUrl = null,
         title = title,
         description = description,
         city = city,

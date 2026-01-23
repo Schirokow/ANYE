@@ -55,6 +55,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
+import org.example.anye.R
 import org.example.anye.TopLightBlue
 import org.example.anye.data.Event
 import org.example.anye.data.MapDataHolder
@@ -291,14 +292,14 @@ fun FirestoreEventDetailScreen(navController: NavController, id: String){
                         shape = MaterialTheme.shapes.medium,
                         elevation = CardDefaults.cardElevation(12.dp)
                     ) {
-                        if (imageUrl != null) {
+
                             AsyncImage(
-                                model = imageUrl,
+                               model = imageUrl ?: R.drawable.img,
                                 contentDescription = "Event Image",
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
                             )
-                        }
+
                     }
 
 

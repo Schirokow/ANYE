@@ -76,7 +76,7 @@ fun EventCard(
             // Verwende AsyncImage, um das Bild von der URL zu laden
             if (!imageToLoad.isNullOrBlank()) {
                 AsyncImage(
-                    model = event.imageUrl,
+                    model = event.imageUrl ?: R.drawable.img,
                     contentDescription = event.title,
                     fallback = painterResource(R.drawable.img),
                     error = painterResource(R.drawable.img),
