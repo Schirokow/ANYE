@@ -34,6 +34,7 @@ import com.google.firebase.auth.FirebaseAuth
 import org.example.anye.presentation.screens.AccountScreen
 import org.example.anye.presentation.screens.ContentDetailScreen
 import org.example.anye.presentation.screens.CreateEventScreen
+import org.example.anye.presentation.screens.EventScreen
 import org.example.anye.presentation.screens.FavoriteScreen
 import org.example.anye.presentation.screens.FirestoreEventDetailScreen
 import org.example.anye.presentation.screens.HomeScreen
@@ -172,6 +173,10 @@ fun Navigation() {
 
         composable("AccountScreen") {
             AccountScreen(navController)
+        }
+
+        composable("EventScreen") {
+            EventScreen(navController)
         }
     }
 

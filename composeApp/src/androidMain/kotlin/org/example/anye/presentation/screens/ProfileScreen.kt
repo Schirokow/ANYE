@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -46,6 +45,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
@@ -231,7 +231,7 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
                     )
                 }
 
-                Spacer(modifier = Modifier.height(5.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 ClickButton(
                     text = "Event Erstellen",
@@ -239,7 +239,23 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
                         navController.navigate("CreateEventScreen")
                     },
                     modifier = Modifier
+                         .padding(horizontal = 110.dp)
+                         .fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                ClickButton(
+                    text = "Eigene Events",
+                    onClick = {
+                        navController.navigate("EventScreen")
+                    },
+                    modifier = Modifier
+                        .padding(horizontal = 110.dp)
+                        .fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 ClickButton(
                     text = "Abmelden",
@@ -249,7 +265,10 @@ fun ProfileScreen (navController: NavController, userId: Int?) {
 //                        navController.navigate("LoginScreen") {
 //                            popUpTo("ProfileScreen") { inclusive = true }
 //                        }
-                    }
+                    },
+                    modifier = Modifier
+                        .padding(horizontal = 110.dp)
+                        .fillMaxWidth()
                 )
 
 //                TabRow(

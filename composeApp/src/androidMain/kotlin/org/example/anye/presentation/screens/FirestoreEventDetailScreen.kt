@@ -244,7 +244,6 @@ fun FirestoreEventDetailScreen(navController: NavController, id: String) {
                 text = "Auf der Karte",
                 onClick = {
                     Log.d(TAG, "Navigating to location screen")
-                    MapDataHolder.shouldFollowUser = false // Follow aus
 
                 },
                 modifier = Modifier
