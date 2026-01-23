@@ -322,7 +322,15 @@ fun CreateEventScreen(navController: NavController) {
                         confirmButton = {
                             Button(
                                 onClick = {
-                                    saveEvent(fs = fs, title = titleState, description = descriptionState, start = dataState, city = locationState)
+                                    saveEvent(
+                                        fs = fs,
+                                        title = titleState,
+                                        description = descriptionState,
+                                        start = dataState,
+                                        city = locationState,
+                                        snackbarHostState = snackbarHostState,
+                                        scope = scope
+                                    )
                                     titleState = ""
                                     descriptionState = ""
                                     dataState = ""
@@ -357,17 +365,59 @@ fun CreateEventScreen(navController: NavController) {
     }
 }
 
-private fun saveEvent(fs: FirebaseFirestore, title: String, description: String, city: String, start: String){
-    fs.collection("events")
-        .document().set(
-            Event(
-                userId = "2",
-                imageUrl = "TestUrl",
-                title = title,
-                description = description,
-                city = city,
-                startData = start,
-                location = Location("100", "200")
-            )
-        )
+private fun saveEvent(
+    fs: FirebaseFirestore,
+    title: String,
+    description: String,
+    city: String,
+    start: String,
+    snackbarHostState: SnackbarHostState? = null,
+    scope: kotlinx.coroutines.CoroutineScope? = null
+){
+
+    // Erstelle eine neue Dokument-Referenz mit automatisch generierter ID
+    val newDocRef = fs.collection("events").document()
+    val documentId = newDocRef.id
+
+    // Erstelle das Event-Objekt MIT der ID
+    val event = Event(
+        id = documentId, // WICHTIG: ID hier setzen
+        userId = "2",
+        imageUrl = "TestUrl",
+        title = title,
+        description = description,
+        city = city,
+        startData = start,
+        location = Location("100", "200")
+    )
+
+    // Speichere das Event mit der spezifischen Dokument-ID
+    newDocRef.set(event)
+        .addOnSuccessListener {
+            Log.d("CreateEventScreen", "Event erfolgreich erstellt mit ID: $documentId")
+            // Feedback an Benutzer geben
+            scope?.launch {
+                snackbarHostState?.showSnackbar("Event erfolgreich erstellt!")
+            }
+        }
+        .addOnFailureListener { e ->
+            Log.e("CreateEventScreen", "Fehler beim Erstellen des Events: ${e.message}")
+            scope?.launch {
+                snackbarHostState?.showSnackbar("Fehler beim Erstellen des Events")
+            }
+        }
+
+
+//    fs.collection("events")
+//        .document().set(
+//            Event(
+//                userId = "2",
+//                imageUrl = "TestUrl",
+//                title = title,
+//                description = description,
+//                city = city,
+//                startData = start,
+//                location = Location("100", "200")
+//            )
+//        )
 }
