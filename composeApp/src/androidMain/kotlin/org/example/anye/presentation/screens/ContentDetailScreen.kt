@@ -328,12 +328,12 @@ fun ContentDetailScreen(navController: NavController, id: String){
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(500.dp)
-                    ) // Definiert die zusätzliche Scroll-Länge
+                    )
 
                 }
                 }
 
-            AnyeBottomBar(navController)
+//            AnyeBottomBar(navController)
         }
     }
 }

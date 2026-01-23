@@ -68,7 +68,7 @@ import org.koin.androidx.compose.koinViewModel
 import java.net.URLEncoder
 
 @Composable
-fun FirestoreEventDetailScreen(navController: NavController, id: String){
+fun FirestoreEventDetailScreen(navController: NavController, id: String) {
     val TAG = "FirestoreEventDetailScreen"
     Log.d(TAG, "Screen initialized with id: $id")
 
@@ -83,23 +83,23 @@ fun FirestoreEventDetailScreen(navController: NavController, id: String){
     LaunchedEffect(id) {
         Log.d(TAG, "Loading festival for id: $id")
 
-            db.collection("events")
-                .document(id)
-                .get()
-                .addOnSuccessListener { document ->
-                    if (document.exists()) {
-                        val event = document.toObject(Event::class.java)
-                        // Setze die ID manuell
-                        event?.id = document.id
-                        firestoreEvent = event
-                        Log.d(TAG, "Firestore event loaded: ${event?.title}")
-                    } else {
-                        Log.w(TAG, "Firestore event not found: $id")
-                    }
+        db.collection("events")
+            .document(id)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val event = document.toObject(Event::class.java)
+                    // Setze die ID manuell
+                    event?.id = document.id
+                    firestoreEvent = event
+                    Log.d(TAG, "Firestore event loaded: ${event?.title}")
+                } else {
+                    Log.w(TAG, "Firestore event not found: $id")
                 }
-                .addOnFailureListener { e ->
-                    Log.e(TAG, "Error loading Firestore event", e)
-                }
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Error loading Firestore event", e)
+            }
 
     }
 
@@ -125,20 +125,24 @@ fun FirestoreEventDetailScreen(navController: NavController, id: String){
                 .fillMaxSize()
                 .background(AccentColor),
         ) {
-            Box (
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(WindowInsets.systemBars.asPaddingValues())
-                    .background(brush = Brush.verticalGradient(colors = listOf(
-                        TopLightBlue,
-                        BottomDarkBlue
-                    ))),
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                TopLightBlue,
+                                BottomDarkBlue
+                            )
+                        )
+                    ),
                 contentAlignment = Alignment.Center
-            ){
-                Row (
+            ) {
+                Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
-                ){
+                ) {
                     Icon(
                         imageVector = Icons.Rounded.ArrowBackIosNew,
                         contentDescription = "Zurück",
@@ -191,10 +195,14 @@ fun FirestoreEventDetailScreen(navController: NavController, id: String){
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(brush = Brush.verticalGradient(colors = listOf(
-                    TopLightBlue,
-                    BottomDarkBlue
-                )))
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            TopLightBlue,
+                            BottomDarkBlue
+                        )
+                    )
+                )
         ) {
 
             // Auth-Status oben rechts
@@ -238,34 +246,6 @@ fun FirestoreEventDetailScreen(navController: NavController, id: String){
                     Log.d(TAG, "Navigating to location screen")
                     MapDataHolder.shouldFollowUser = false // Follow aus
 
-                    // 1. Hole die Location-Daten aus dem Event-Objekt
-//                    val venue = event?._embedded?.venues?.firstOrNull()
-//                    val lat = venue?.location?.latitude
-//                    val lng = venue?.location?.longitude
-//
-//                    // Hole den Event-Namen
-//                    // (Wir nehmen "Event" als Fallback, falls der Name null ist)
-//                    val eventName = event?.name ?: "Event"
-//
-//                    //  URL-Encoding für den Namen
-//                    // Dies ist SEHR WICHTIG, damit Namen mit Leerzeichen (z.B. "Cool Event")
-//                    // die Navigationsroute nicht zerstören.
-//                    val encodedEventName = try {
-//                        URLEncoder.encode(eventName, "UTF-8")
-//                    } catch (e: Exception) {
-//                        "Event" // Fallback
-//                    }
-
-
-                    // 2. Prüfe, ob die Daten vorhanden sind
-//                    if (lat != null && lng != null) {
-//                        // 3. Navigiere mit den Koordinaten als Parameter
-//                        navController.navigate("LocationScreen?lat=$lat&lng=$lng&eventName=$encodedEventName")
-//                    } else {
-//                        // Optional: Zeige eine Meldung, wenn keine Location vorhanden ist
-//                        Log.w(TAG, "Keine Location-Daten für dieses Event verfügbar.")
-//                        // Hier könntest du eine Snackbar anzeigen
-//                    }
                 },
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -276,8 +256,8 @@ fun FirestoreEventDetailScreen(navController: NavController, id: String){
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 100.dp,start = 16.dp, end = 16.dp),
-                contentPadding = PaddingValues(bottom = 80.dp), // Platz für AnyeBottomBar
+                    .padding(top = 100.dp, start = 16.dp, end = 16.dp),
+                contentPadding = PaddingValues(bottom = 80.dp),
                 horizontalAlignment = Alignment.Start
             ) {
                 item {
@@ -293,15 +273,14 @@ fun FirestoreEventDetailScreen(navController: NavController, id: String){
                         elevation = CardDefaults.cardElevation(12.dp)
                     ) {
 
-                            AsyncImage(
-                               model = imageUrl ?: R.drawable.img,
-                                contentDescription = "Event Image",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
+                        AsyncImage(
+                            model = imageUrl ?: R.drawable.img,
+                            contentDescription = "Event Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
 
                     }
-
 
                     // Titel
                     Text(
@@ -311,7 +290,7 @@ fun FirestoreEventDetailScreen(navController: NavController, id: String){
                         modifier = Modifier.padding(16.dp)
                     )
 
-                    // Datum (verwende direkt den String)
+                    // Datum
                     Text(
                         text = "Datum: ${firestoreEvent?.startData ?: "N/A"}",
                         style = MaterialTheme.typography.bodyLarge.copy(fontSize = 25.sp),
@@ -326,36 +305,17 @@ fun FirestoreEventDetailScreen(navController: NavController, id: String){
                         modifier = Modifier.padding(16.dp)
                     )
 
-                    // Link zum Ticketmaster-Event (als klickbarer Text)
-//                    event?.url?.let { url ->
-//                        Text(
-//                            text = "Tickets kaufen: $url",
-//                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 25.sp),
-//                            color = Color.Blue, // oder eine andere Farbe, um den Link zu betonen
-//                            modifier = Modifier
-//                                .padding(16.dp)
-//                                .clickable {
-//                                    // Logik für den Klick auf den Link
-//                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-//                                    if (intent.resolveActivity(context.packageManager) != null) {
-//                                        context.startActivity(intent)
-//                                    }
-//
-//                                }
-//                        )
-//                    }
-
                     // Spacer für minimale Scroll-Länge
                     Spacer(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(500.dp)
-                    ) // Definiert die zusätzliche Scroll-Länge
+                    )
 
                 }
             }
 
-            AnyeBottomBar(navController)
+//            AnyeBottomBar(navController)
         }
     }
 }

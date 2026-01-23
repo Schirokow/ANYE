@@ -61,30 +61,23 @@ fun EventCard(
 ) {
 
     val cardSize = if (isLarge) 200.dp else 100.dp
-    val imageToLoad = event.imageUrl
 
     Card(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(12.dp),
         modifier = modifier
             .size(cardSize)
-            //.fillMaxWidth()
-            //.aspectRatio(1f)
             .clickable(onClick = onClick)
     ) {
         Box {
-            // Verwende AsyncImage, um das Bild von der URL zu laden
-            if (!imageToLoad.isNullOrBlank()) {
-                AsyncImage(
-                    model = event.imageUrl ?: R.drawable.img,
-                    contentDescription = event.title,
-                    fallback = painterResource(R.drawable.img),
-                    error = painterResource(R.drawable.img),
-                    placeholder = painterResource(R.drawable.img),
-                    contentScale = ContentScale.FillBounds,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+
+            AsyncImage(
+                model = event.imageUrl ?: R.drawable.img,
+                contentDescription = event.title,
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier.fillMaxSize()
+            )
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
