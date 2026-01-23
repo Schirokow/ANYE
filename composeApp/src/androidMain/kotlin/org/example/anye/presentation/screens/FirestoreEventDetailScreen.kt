@@ -290,6 +290,13 @@ fun FirestoreEventDetailScreen(navController: NavController, id: String) {
                         modifier = Modifier.padding(16.dp)
                     )
 
+                    Text(
+                        text = "Beschreibung: ${firestoreEvent?.description ?: "N/A"}",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 25.sp),
+                        color = Color.White,
+                        modifier = Modifier.padding(16.dp)
+                    )
+
                     // Datum
                     Text(
                         text = "Datum: ${firestoreEvent?.startData ?: "N/A"}",
