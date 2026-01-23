@@ -518,7 +518,7 @@ fun EventContent(navController: NavController, viewModel: HomeViewModel = koinVi
     }
 
     selectedFirestoreEvent?.let { event ->
-//        Log.d(TAG, "Showing detail overlay for id: ${event.id}")
+        Log.d(TAG, "Showing detail overlay for id: ${event.id}")
 
         Surface(
             color = BackgroundColor.copy(alpha = 0.9f), // Farbe von Hintergrund
@@ -544,7 +544,8 @@ fun EventContent(navController: NavController, viewModel: HomeViewModel = koinVi
 //                            .fillMaxHeight(0.5f)
                             .height(300.dp),
                         onClick = {
-
+                            Log.d(TAG, "Navigating to detail screen for id: ${event.id}")
+                            navController.navigate("FirestoreEventDetailScreen/${event.id}")
                         },
                         isLarge = true,
                         textIsLarge = true

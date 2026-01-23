@@ -114,8 +114,8 @@ fun CreateEventScreen(navController: NavController) {
             SnackbarHost(hostState = snackbarHostState) { data ->
                 // Hole Farbe aus den SnackbarData-Extras
                 val background = when (data.visuals.message) {
-                    "Account erfolgreich gelöscht" -> Color(0xFF4CAF50) // Grün
-                    "Passwörter stimmen nicht überein" -> Color(0xFFF44336) // Rot
+                    "Event erfolgreich erstellt!"-> Color(0xFF4CAF50) // Grün
+                    "Fehler beim Erstellen des Events" -> Color(0xFFF44336) // Rot
                     else -> Color(0xFF2196F3) // Blau (Standard)
                 }
                 Snackbar(

@@ -35,6 +35,7 @@ import org.example.anye.presentation.screens.AccountScreen
 import org.example.anye.presentation.screens.ContentDetailScreen
 import org.example.anye.presentation.screens.CreateEventScreen
 import org.example.anye.presentation.screens.FavoriteScreen
+import org.example.anye.presentation.screens.FirestoreEventDetailScreen
 import org.example.anye.presentation.screens.HomeScreen
 import org.example.anye.presentation.screens.LocationScreen
 import org.example.anye.presentation.screens.LoginScreen
@@ -158,6 +159,11 @@ fun Navigation() {
             val id = backStackEntry.arguments?.getString("id") ?: ""
             Log.d(TAG, "Navigating to ContentDetailScreen with index: $id")
             ContentDetailScreen(navController, id)
+        }
+
+        composable("FirestoreEventDetailScreen/{id}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id") ?: ""
+            FirestoreEventDetailScreen(navController, id)
         }
 
         composable("ProfileScreen") {
