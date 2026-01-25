@@ -2,6 +2,8 @@ package org.example.anye.presentation.screens
 
 import android.app.Application
 import android.util.Log
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,23 +21,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,31 +46,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
 import org.example.anye.data.EventViewModel
 import org.example.anye.data.EventViewModelFactory
+import org.example.anye.data.FirebaseEvent
 import org.example.anye.ui.components.AuthStatusIndicator
-import org.example.anye.ui.components.buttons.ClickButton
-import org.example.anye.ui.components.card.EventCard
 import org.example.anye.ui.components.card.FirebaseEventCard
-import org.example.anye.viewmodels.AuthResult
-import org.example.anye.viewmodels.LoginViewModel
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun EventScreen(navController: NavController) {
@@ -82,14 +75,22 @@ fun EventScreen(navController: NavController) {
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val userEvent = ""
     val itemsPerRow = 2
     val firebaseEvents by viewModel.firebaseEventsData.collectAsState()
 
+    // State für ausgewählte Events
+    var selectedEvent by remember { mutableStateOf<FirebaseEvent?>(null) }
 
-    // Zustand für den Bestätigungsdialog
+
+    // State für den Bestätigungsdialog
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var eventToDelete by remember { mutableStateOf<String?>(null) }
 
+    // Animation für die Vergrößerung
+    val animateScale by animateFloatAsState(
+        targetValue = if (selectedEvent != null) 1f else 0.5f,
+        animationSpec = tween(durationMillis = 400)
+    )
 
 
     // Scaffold als Hauptcontainer verwenden
@@ -98,9 +99,9 @@ fun EventScreen(navController: NavController) {
             SnackbarHost(hostState = snackbarHostState) { data ->
                 // Hole Farbe aus den SnackbarData-Extras
                 val background = when (data.visuals.message) {
-                    "Event erfolgreich gelöscht!"-> Color(0xFF4CAF50) // Grün
-                    "Fehler beim Löschen des Events" -> Color(0xFFF44336) // Rot
-                    else -> Color(0xFF2196F3) // Blau (Standard)
+                    "Event gelöscht!" -> Color(0xFF4CAF50)
+                    "Fehler beim Löschen des Events" -> Color(0xFFF44336)
+                    else -> Color(0xFF2196F3)
                 }
                 Snackbar(
                     modifier = Modifier
@@ -166,7 +167,7 @@ fun EventScreen(navController: NavController) {
                     color = Color.White,
                     modifier = Modifier
                         .clickable {
-                            Log.d("AccountScreen", "Navigating to ProfileScreen")
+                            Log.d("EventScreen", "Navigating to ProfileScreen")
                             navController.navigate("ProfileScreen")
                         }
                 )
@@ -202,8 +203,6 @@ fun EventScreen(navController: NavController) {
                         Text("Keine eigene Events", color = Color.White, fontSize = 20.sp)
                     }
                 } else {
-//                    FavoriteContent(navController, viewModel)
-
 
                     Spacer(modifier = Modifier.height(30.dp))
 
@@ -224,9 +223,12 @@ fun EventScreen(navController: NavController) {
                             ) {
                                 FirebaseEventCard(
                                     event = event,
-                                    modifier = Modifier,
+                                    modifier = Modifier
+                                        .clickable {
+                                            Log.d(TAG, "Event clicked: ${event.title}")
+                                                   },
                                     onClick = {
-//                                    selectedFirestoreEvent = event
+                                        selectedEvent = event
                                     },
                                     isLarge = true,
                                     textIsLarge = false
@@ -237,51 +239,136 @@ fun EventScreen(navController: NavController) {
                     }
                 }
 
-                // AlerDer Bestätigungsdialog
-                if (showDeleteDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showDeleteDialog = false },
-                        title = {
-                            Text(
-                                "Event löschen?",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
-                        },
-                        text = {
-                            Text(
-                                "Bist du sicher, dass du dieses Event löschen willst?",
-                                color = Color.White
-                            )
-                        },
-                        confirmButton = {
-                            Button(
-                                onClick = {
+            }
 
+            // Vergrößerte Ansicht (Overlay)
+            selectedEvent?.let { event ->
+                Surface(
+                    color = BackgroundColor.copy(alpha = 0.9f),
+                    modifier = Modifier.fillMaxSize(),
+                    onClick = {
+                        // Klick außerhalb schließt das Overlay
+//                        selectedEvent = null
+                    }
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 150.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            FirebaseEventCard(
+                                event = event,
+                                modifier = Modifier
+                                    .graphicsLayer(
+                                        scaleX = animateScale,
+                                        scaleY = animateScale
+                                    )
+                                    .fillMaxWidth(0.9f)
+                                    .height(300.dp)
+                                    .clickable {
+                                        // Optional: Zur Detailansicht navigieren
+                                        // navController.navigate("FirestoreEventDetailScreen/${event.id}")
+                                    },
+                                onClick = {},
+                                isLarge = true,
+                                textIsLarge = true
+                            )
+                        }
 
-                                },
-                                colors = buttonColors(
-                                    containerColor = Color.Green
-                                )
-                            ) {
-                                Text("Ja, löschen", color = Color.White)
-                            }
-                        },
-                        dismissButton = {
-                            Button(
-                                onClick = { showDeleteDialog = false },
-                                colors = buttonColors(
-                                    containerColor = Color.Blue
-                                )
-                            ) {
-                                Text("Abbrechen", color = Color.White)
-                            }
-                        },
-                        containerColor = Color(0xFF1E1E1E),
-                        shape = RoundedCornerShape(16.dp)
-                    )
+                        // Schließen-Button
+                        Icon(
+                            imageVector = Icons.Rounded.ArrowBackIosNew,
+                            contentDescription = "Close",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(24.dp)
+                                .size(34.dp)
+                                .clickable {
+                                    Log.d(TAG, "Close button clicked")
+                                    selectedEvent = null
+                                }
+                        )
+
+                        // Löschen-Button
+                        Icon(
+                            imageVector = Icons.Rounded.Delete,
+                            contentDescription = "Delete",
+                            tint = Color.Red,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(24.dp)
+                                .size(34.dp)
+                                .clickable {
+                                    Log.d(TAG, "Delete button clicked for event: ${event.id}")
+                                    eventToDelete = event.id
+                                    showDeleteDialog = true
+                                }
+                        )
+                    }
                 }
+            }
+
+            // Bestätigungsdialog für Löschen
+            if (showDeleteDialog) {
+                AlertDialog(
+                    onDismissRequest = {
+                        showDeleteDialog = false
+                        eventToDelete = null
+                    },
+                    title = {
+                        Text(
+                            "Event löschen?",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    text = {
+                        Text(
+                            "Möchtest du dieses Event wirklich löschen?",
+                            color = Color.White
+                        )
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                eventToDelete?.let { eventId ->
+                                    viewModel.deleteEventCompletely(eventId)
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Event gelöscht!")
+                                    }
+                                    selectedEvent = null
+                                }
+                                showDeleteDialog = false
+                                eventToDelete = null
+                            },
+                            colors = buttonColors(
+                                containerColor = Color.Red
+                            )
+                        ) {
+                            Text("Löschen", color = Color.White)
+                        }
+                    },
+                    dismissButton = {
+                        Button(
+                            onClick = {
+                                showDeleteDialog = false
+                                eventToDelete = null
+                            },
+                            colors = buttonColors(
+                                containerColor = Color.Blue
+                            )
+                        ) {
+                            Text("Abbrechen", color = Color.White)
+                        }
+                    },
+                    containerColor = Color(0xFF1E1E1E),
+                    shape = RoundedCornerShape(16.dp)
+                )
             }
         }
     }
 }
+

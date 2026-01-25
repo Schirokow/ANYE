@@ -30,18 +30,18 @@ import org.example.anye.data.FirebaseEvent
 fun FirebaseEventCard(
     event: FirebaseEvent,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit,
+    onClick: () -> Unit = {},
     isLarge: Boolean = false,
     textIsLarge: Boolean = false
 ) {
 
-    val cardSize = if (isLarge) 200.dp else 100.dp
+//    val cardSize = if (isLarge) 200.dp else 100.dp
 
     Card(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(12.dp),
         modifier = modifier
-            .size(cardSize)
+//            .size(cardSize)
             .clickable(onClick = onClick)
     ) {
         Box {
@@ -49,18 +49,29 @@ fun FirebaseEventCard(
             AsyncImage(
                 model = event.imageUrl ?: R.drawable.img,
                 contentDescription = event.title,
-                contentScale = ContentScale.FillBounds,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
 
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.Black.copy(alpha = 0.5f))
+                    .fillMaxSize()
+                    .background(
+                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.7f)
+                            ),
+                            startY = 0.5f
+                        )
+                    )
                     .align(Alignment.BottomStart)
             ) {
                 Column(
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomStart)
+                        .padding(12.dp)
                 ) {
                     Text(
                         text = event.title ?: "No Title",

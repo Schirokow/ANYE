@@ -73,6 +73,29 @@ class EventViewModel(
         }
     }
 
+    fun deleteEventFromFirestore(eventId: String) {
+        viewModelScope.launch {
+            try {
+                getFirebaseEventsUseCase.deleteEventFromFirestore(eventId)
+                logMessage("EventViewModel: Event deleted from Firestore")
+            } catch (e: Exception) {
+                logMessage("EventViewModel: Error deleting event from Firestore: ${e.message}")
+            }
+        }
+    }
+
+    fun deleteEventCompletely(eventId: String) {
+        viewModelScope.launch {
+            try {
+                getFirebaseEventsUseCase.deleteEventCompletely(eventId)
+                logMessage("EventViewModel: Event completely deleted from both sources")
+            } catch (e: Exception) {
+                logMessage("EventViewModel: Error completely deleting event: ${e.message}")
+            }
+        }
+    }
+
+
     fun saveEvent(
         fs: FirebaseFirestore,
         title: String,
