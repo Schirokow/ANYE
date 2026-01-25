@@ -14,8 +14,6 @@ plugins {
     kotlin("plugin.serialization") version "2.2.10"
     id("com.rickclephas.kmp.nativecoroutines") version "1.0.0-ALPHA-47"
     id("com.google.gms.google-services")
-
-
 }
 
 kotlin {
@@ -40,11 +38,42 @@ kotlin {
             implementation(libs.koin.androidx.compose)
 
             // Firebase
-            implementation(project.dependencies.platform("com.google.firebase:firebase-bom:34.3.0"))
-            implementation("com.google.firebase:firebase-analytics")
-            implementation ("com.google.firebase:firebase-firestore")
-            implementation ("com.google.firebase:firebase-storage")
-            implementation("com.google.firebase:firebase-auth")
+            // Firebase MIT BOM
+            // 1. Zuerst die BOM importieren
+            implementation(project.dependencies.platform(libs.firebase.bom))
+
+            // 2. Dann die Firebase-Abhängigkeiten OHNE Versionen
+            implementation(libs.firebase.analytics)
+            implementation(libs.firebase.firestore)
+            implementation(libs.firebase.storage)
+            implementation(libs.firebase.auth)
+
+
+
+
+//            implementation(project.dependencies.platform(libs.firebase.bom))
+//            implementation(libs.firebase.firestore.ktx)
+//            implementation(libs.firebase.storage.ktx)
+//            implementation(libs.firebase.auth.ktx)
+//            implementation(project.dependencies.platform("com.google.firebase:firebase-bom:34.3.0"))
+//            implementation("com.google.firebase:firebase-analytics")
+////            implementation ("com.google.firebase:firebase-firestore")
+//            implementation (libs.firebase.firestore.ktx)
+//            implementation ("com.google.firebase:firebase-storage")
+//            implementation("com.google.firebase:firebase-auth")
+
+            // ODER einfachere Lösung: Direkte Implementierung mit BOM:
+//            implementation(project.dependencies.platform("com.google.firebase:firebase-bom:34.3.0"))
+//            implementation("com.google.firebase:firebase-firestore-ktx")
+//            implementation("com.google.firebase:firebase-storage-ktx")
+//            implementation("com.google.firebase:firebase-auth-ktx")
+
+            // Firebase mit BOM (BoM)
+//            implementation(project.dependencies.platform(libs.firebase.bom))  // BOM zuerst
+//            implementation(libs.firebase.analytics.ktx)  // Ohne Version - wird von BOM kontrolliert
+//            implementation(libs.firebase.firestore.ktx)  // Ohne Version - wird von BOM kontrolliert
+//            implementation(libs.firebase.storage.ktx)    // Ohne Version - wird von BOM kontrolliert
+//            implementation(libs.firebase.auth.ktx)       // Ohne Version - wird von BOM kontrolliert
 
             // Extended Icons
             implementation(libs.androidx.material.icons.extended)

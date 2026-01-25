@@ -8,5 +8,8 @@ import com.google.firebase.firestore.IgnoreExtraProperties
 data class Location(
     var longitude: String? = null,
     var latitude: String? = null
-)
+){
+    // Expliziter no-arg Konstruktor für Firebase
+    constructor() : this(null, null)
+}
 

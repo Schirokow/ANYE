@@ -106,9 +106,9 @@ fun FavoriteScreen(navController: NavController) {
             SnackbarHost(hostState = snackbarHostState) { data ->
                 // Hole Farbe aus den SnackbarData-Extras
                 val background = when (data.visuals.message) {
-                    "Fehler beim entfernen!" -> Color(0xFFF44336) // Rot
-                    "Fehler beim Favoriten löschen!" -> Color(0xFFF44336) // Rot
-                    else -> Color(0xFF2196F3) // Blau (Standard)
+                    "Fehler beim entfernen!" -> Color(0xFFF44336)
+                    "Fehler beim Favoriten löschen!" -> Color(0xFFF44336)
+                    else -> Color(0xFF2196F3)
                 }
                 Snackbar(
                     modifier = Modifier

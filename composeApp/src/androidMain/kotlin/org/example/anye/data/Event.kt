@@ -3,6 +3,7 @@ package org.example.anye.data
 import androidx.annotation.Keep
 import com.google.firebase.firestore.IgnoreExtraProperties
 
+
 @Keep
 @IgnoreExtraProperties
 data class Event(
@@ -15,4 +16,7 @@ data class Event(
     var city: String? = null,
     var location: Location? = null,
 
-)
+){
+    // Expliziter no-arg Konstruktor für Firebase
+    constructor() : this(null, null, null, null, null, null, null, null)
+}
