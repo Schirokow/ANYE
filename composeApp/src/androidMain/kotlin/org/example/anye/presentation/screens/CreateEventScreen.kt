@@ -1,5 +1,6 @@
 package org.example.anye.presentation.screens
 
+import android.app.Application
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -47,6 +48,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -57,7 +59,8 @@ import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
 import org.example.anye.data.Event
-import org.example.anye.data.Location
+import org.example.anye.data.EventViewModel
+import org.example.anye.data.EventViewModelFactory
 import org.example.anye.ui.components.AuthStatusIndicator
 import org.example.anye.ui.components.buttons.ClickButton
 import org.example.anye.viewmodels.AuthResult
@@ -67,11 +70,14 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun CreateEventScreen(navController: NavController) {
 
-    val viewModel: LoginViewModel = koinViewModel()
+    val context = LocalContext.current
+    val viewModel: EventViewModel = viewModel(
+        factory = EventViewModelFactory(context.applicationContext as Application)
+    )
+
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    val context = LocalContext.current
     val fs = Firebase.firestore
     val currentUser = FirebaseAuth.getInstance().currentUser
 
@@ -83,31 +89,6 @@ fun CreateEventScreen(navController: NavController) {
     // Zustand für den Bestätigungsdialog
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-
-    // Auf Events vom ViewModel hören
-    LaunchedEffect(Unit) {
-        viewModel.authResult.collect { result ->
-            when (result) {
-                is AuthResult.Success -> {
-                    snackbarHostState.showSnackbar(message = result.message)
-                    // Navigation nach erfolgreichem Löschen
-                    navController.navigate("LoginScreen") {
-                        popUpTo("AccountScreen") {
-                            inclusive = true
-                        } // verhindert zurück zur Login-Seite
-                    }
-                }
-
-                is AuthResult.Error -> {
-                    snackbarHostState.showSnackbar(message = result.message)
-                }
-
-                is AuthResult.Initial -> {
-                    // Nichts tun beim Start
-                }
-            }
-        }
-    }
 
 
     // Scaffold als Hauptcontainer verwenden
@@ -324,7 +305,7 @@ fun CreateEventScreen(navController: NavController) {
                         confirmButton = {
                             Button(
                                 onClick = {
-                                    saveEvent(
+                                    viewModel.saveEvent(
                                         fs = fs,
                                         title = titleState,
                                         description = descriptionState,
@@ -368,60 +349,3 @@ fun CreateEventScreen(navController: NavController) {
     }
 }
 
-private fun saveEvent(
-    fs: FirebaseFirestore,
-    title: String,
-    description: String,
-    city: String,
-    start: String,
-    userId: String,
-    snackbarHostState: SnackbarHostState? = null,
-    scope: kotlinx.coroutines.CoroutineScope? = null
-){
-
-    // Erstelle eine neue Dokument-Referenz mit automatisch generierter ID
-    val newDocRef = fs.collection("events").document()
-    val documentId = newDocRef.id
-
-    // Erstelle das Event-Objekt MIT der ID
-    val event = Event(
-        id = documentId, // WICHTIG: ID hier setzen
-        userId = userId,
-        imageUrl = null,
-        title = title,
-        description = description,
-        city = city,
-        startData = start,
-        location = Location("100", "200")
-    )
-
-    // Speichere das Event mit der spezifischen Dokument-ID
-    newDocRef.set(event)
-        .addOnSuccessListener {
-            Log.d("CreateEventScreen", "Event erfolgreich erstellt mit ID: $documentId")
-            // Feedback an Benutzer geben
-            scope?.launch {
-                snackbarHostState?.showSnackbar("Event erfolgreich erstellt!")
-            }
-        }
-        .addOnFailureListener { e ->
-            Log.e("CreateEventScreen", "Fehler beim Erstellen des Events: ${e.message}")
-            scope?.launch {
-                snackbarHostState?.showSnackbar("Fehler beim Erstellen des Events")
-            }
-        }
-
-
-//    fs.collection("events")
-//        .document().set(
-//            Event(
-//                userId = "2",
-//                imageUrl = "TestUrl",
-//                title = title,
-//                description = description,
-//                city = city,
-//                startData = start,
-//                location = Location("100", "200")
-//            )
-//        )
-}

@@ -1,10 +1,5 @@
 package org.example.anye.ui.components.card
 
-
-import androidx.compose.ui.Alignment
-import org.example.anye.data.Event
-
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -16,43 +11,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import org.example.anye.R
-
-
-@Preview //(showBackground = true)
-@Composable
-fun PreviewEventCard() {
-    val event = Event(
-        userId = "1",
-        imageUrl = "",
-        title = "Smooth Sound",
-        description = "Free Entry - All Welcome",
-        startData = "05.05.2025",
-        city = "Stuttgart"
-
-    )
-    EventCard(
-        event = event,
-        onClick = {},
-        isLarge = false
-    )
-}
+import org.example.anye.data.Event
+import org.example.anye.data.FirebaseEvent
 
 @Composable
-fun EventCard(
-    event: Event,
+fun FirebaseEventCard(
+    event: FirebaseEvent,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     isLarge: Boolean = false,

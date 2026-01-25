@@ -1,5 +1,6 @@
 package org.example.anye.presentation.screens
 
+import android.app.Application
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
@@ -33,6 +36,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -57,8 +62,12 @@ import kotlinx.coroutines.launch
 import org.example.anye.AccentColor
 import org.example.anye.BottomDarkBlue
 import org.example.anye.TopLightBlue
+import org.example.anye.data.EventViewModel
+import org.example.anye.data.EventViewModelFactory
 import org.example.anye.ui.components.AuthStatusIndicator
 import org.example.anye.ui.components.buttons.ClickButton
+import org.example.anye.ui.components.card.EventCard
+import org.example.anye.ui.components.card.FirebaseEventCard
 import org.example.anye.viewmodels.AuthResult
 import org.example.anye.viewmodels.LoginViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -66,15 +75,16 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun EventScreen(navController: NavController) {
 
-    val viewModel: LoginViewModel = koinViewModel()
+    val context = LocalContext.current
+    val viewModel: EventViewModel = viewModel(
+        factory = EventViewModelFactory(context.applicationContext as Application)
+    )
+
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val userEvent = ""
     val itemsPerRow = 2
-
-    val context = LocalContext.current
-    val fs = Firebase.firestore
-    val currentUser = FirebaseAuth.getInstance().currentUser
+    val firebaseEvents by viewModel.firebaseEventsData.collectAsState()
 
 
     // Zustand für den Bestätigungsdialog
@@ -187,36 +197,44 @@ fun EventScreen(navController: NavController) {
                         .align(Alignment.CenterHorizontally)
                 )
 
-                if (userEvent == "") {
+                if (firebaseEvents.isEmpty()) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("Keine eigene Events", color = Color.White, fontSize = 20.sp)
                     }
                 } else {
 //                    FavoriteContent(navController, viewModel)
-                }
 
-                Spacer(modifier = Modifier.height(30.dp))
 
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(itemsPerRow),
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    Spacer(modifier = Modifier.height(30.dp))
 
-                ) {
-//                    items(displayedEvents) { event ->
-//                        EventCard(
-//                            event = event,
-//                            onClick = {
-//                                Log.d(TAG, "Event clicked: ${event.title.take(15)}...")
-//                            },
-//                            isLarge = true,
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .aspectRatio(1f)
-//                        )
-//                    }
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(itemsPerRow),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+
+                    ) {
+                        items(firebaseEvents.size) { index ->
+                            val event = firebaseEvents[index]
+                            Box(
+                                modifier = Modifier
+                                    .padding(6.dp)
+                                    .aspectRatio(1f)
+                            ) {
+                                FirebaseEventCard(
+                                    event = event,
+                                    modifier = Modifier,
+                                    onClick = {
+//                                    selectedFirestoreEvent = event
+                                    },
+                                    isLarge = true,
+                                    textIsLarge = false
+                                )
+                            }
+
+                        }
+                    }
                 }
 
                 // AlerDer Bestätigungsdialog
@@ -246,7 +264,7 @@ fun EventScreen(navController: NavController) {
                                     containerColor = Color.Green
                                 )
                             ) {
-                                Text("Ja, erstellen", color = Color.White)
+                                Text("Ja, löschen", color = Color.White)
                             }
                         },
                         dismissButton = {

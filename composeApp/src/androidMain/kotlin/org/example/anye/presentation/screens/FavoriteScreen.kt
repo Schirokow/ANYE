@@ -239,7 +239,7 @@ fun FavoriteContent(navController: NavController, viewModel: FavoriteViewModel) 
 
     LaunchedEffect(favoriteEvents) {
         favoriteEvents.forEach { event ->
-            favoriteStates[event.eventId] = true // Alle Festivals hier sind Favoriten
+            favoriteStates[event.eventId] = true
         }
     }
 
