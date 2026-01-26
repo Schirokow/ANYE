@@ -123,12 +123,12 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
             SnackbarHost(hostState = snackbarHostState) { data ->
                 // Hole Farbe aus den SnackbarData-Extras
                 val background = when (data.visuals.message) {
-                    "Events erfolgreich geladen" -> Color(0xFF4CAF50) // Grün
-                    "Zu Favoriten hinzugefügt" -> Color(0xFF4CAF50) // Grün
-                    "Fehler beim Laden der Events" -> Color(0xFFF44336) // Rot
-                    "Fehler beim Löschen!" -> Color(0xFFF44336) // Rot
-                    "Fehler beim Favorisieren!" -> Color(0xFFF44336) // Rot
-                    else -> Color(0xFF2196F3) // Blau (Standard)
+                    "Events erfolgreich geladen" -> Color(0xFF4CAF50)
+                    "Zu Favoriten hinzugefügt" -> Color(0xFF4CAF50)
+                    "Fehler beim Laden der Events" -> Color(0xFFF44336)
+                    "Fehler beim Löschen!" -> Color(0xFFF44336)
+                    "Fehler beim Favorisieren!" -> Color(0xFFF44336)
+                    else -> Color(0xFF2196F3)
                 }
                 Snackbar(
                     modifier = Modifier
@@ -459,7 +459,6 @@ fun EventContent(navController: NavController, viewModel: HomeViewModel = koinVi
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 100.dp),
-//                        .align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     NewEventCard(
@@ -475,7 +474,6 @@ fun EventContent(navController: NavController, viewModel: HomeViewModel = koinVi
                         modifier = Modifier
                             .graphicsLayer(scaleX = animateScale, scaleY = animateScale)
                             .fillMaxWidth(0.9f)
-//                            .fillMaxHeight(0.5f)
                             .height(300.dp)
                     )
                 }
@@ -510,7 +508,7 @@ fun EventContent(navController: NavController, viewModel: HomeViewModel = koinVi
                 )
                 //Erklärung:
                 //Der Favoritenstatus wird mit favoriteStates (eine mutableStateMapOf) dynamisch geladen, um UI-Reaktivität zu gewährleisten.
-                //LaunchedEffect lädt den Favoritenstatus für jedes Festival beim Rendern.
+                //LaunchedEffect lädt den Favoritenstatus für jedes Event beim Rendern.
                 //Der Favoriten-Button toggelt den Status und aktualisiert favoriteStates.
             }
 
@@ -523,7 +521,7 @@ fun EventContent(navController: NavController, viewModel: HomeViewModel = koinVi
         Surface(
             color = BackgroundColor.copy(alpha = 0.9f), // Farbe von Hintergrund
             modifier = Modifier.fillMaxSize(),
-            onClick = { /*selectedEventData = null */ } // Klick außerhalb schließt das Overlay
+            onClick = { /*selectedFirestoreEvent = null */ } // Klick außerhalb schließt das Overlay
         ) {
             Box(
                 modifier = Modifier.fillMaxSize()
@@ -532,7 +530,6 @@ fun EventContent(navController: NavController, viewModel: HomeViewModel = koinVi
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 100.dp),
-//                        .align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
@@ -541,7 +538,6 @@ fun EventContent(navController: NavController, viewModel: HomeViewModel = koinVi
                         modifier = Modifier
                             .graphicsLayer(scaleX = animateScaleFirestoreEvent, scaleY = animateScaleFirestoreEvent)
                             .fillMaxWidth(0.9f)
-//                            .fillMaxHeight(0.5f)
                             .height(300.dp),
                         onClick = {
                             Log.d(TAG, "Navigating to detail screen for id: ${event.id}")

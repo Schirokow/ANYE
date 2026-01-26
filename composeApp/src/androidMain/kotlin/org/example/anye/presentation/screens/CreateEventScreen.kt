@@ -87,7 +87,7 @@ fun CreateEventScreen(navController: NavController) {
     var dataState by remember { mutableStateOf("") }
 
     // Zustand für den Bestätigungsdialog
-    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showConfirmDialog by remember { mutableStateOf(false) }
 
 
 
@@ -97,9 +97,9 @@ fun CreateEventScreen(navController: NavController) {
             SnackbarHost(hostState = snackbarHostState) { data ->
                 // Hole Farbe aus den SnackbarData-Extras
                 val background = when (data.visuals.message) {
-                    "Event erfolgreich erstellt!"-> Color(0xFF4CAF50) // Grün
-                    "Fehler beim Erstellen des Events" -> Color(0xFFF44336) // Rot
-                    else -> Color(0xFF2196F3) // Blau (Standard)
+                    "Event erfolgreich erstellt!"-> Color(0xFF4CAF50)
+                    "Fehler beim Erstellen des Events" -> Color(0xFFF44336)
+                    else -> Color(0xFF2196F3)
                 }
                 Snackbar(
                     modifier = Modifier
@@ -263,16 +263,13 @@ fun CreateEventScreen(navController: NavController) {
                         .padding(top = 16.dp)
                         .fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(30.dp))
-
-
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(38.dp))
 
                 ClickButton(
                     text = "Event Erstellen",
                     onClick = {
                         if (titleState.isNotBlank() && descriptionState.isNotBlank() && locationState.isNotBlank() && dataState.isNotBlank()) {
-                            showDeleteDialog = true
+                            showConfirmDialog = true
                         }  else {
                             scope.launch {
                                 snackbarHostState.showSnackbar("Bitte alle Felder ausfühlen!")
@@ -285,10 +282,10 @@ fun CreateEventScreen(navController: NavController) {
                         .fillMaxWidth()
                 )
 
-                // AlerDer Bestätigungsdialog
-                if (showDeleteDialog) {
+                // Bestätigungsdialog
+                if (showConfirmDialog) {
                     AlertDialog(
-                        onDismissRequest = { showDeleteDialog = false },
+                        onDismissRequest = { showConfirmDialog = false },
                         title = {
                             Text(
                                 "Event erstellen?",
@@ -319,7 +316,7 @@ fun CreateEventScreen(navController: NavController) {
                                     descriptionState = ""
                                     dataState = ""
                                     locationState = ""
-                                    showDeleteDialog = false
+                                    showConfirmDialog = false
 
 
                                 },
@@ -332,7 +329,7 @@ fun CreateEventScreen(navController: NavController) {
                         },
                         dismissButton = {
                             Button(
-                                onClick = { showDeleteDialog = false },
+                                onClick = { showConfirmDialog = false },
                                 colors = buttonColors(
                                     containerColor = Color.Blue
                                 )

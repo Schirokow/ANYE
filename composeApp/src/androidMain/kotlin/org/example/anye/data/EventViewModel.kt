@@ -16,7 +16,7 @@ import org.example.anye.logMessage
 
 class EventViewModel(
     private val getFirebaseEventsUseCase: GetFirebaseEventsUseCase
-): ViewModel() {
+) : ViewModel() {
 
     private val _firebaseEventsData = MutableStateFlow<List<FirebaseEvent>>(emptyList())
     val firebaseEventsData: StateFlow<List<FirebaseEvent>> = _firebaseEventsData.asStateFlow()
@@ -29,10 +29,10 @@ class EventViewModel(
         }
     }
 
-    fun addEvent(event: Event){
+    fun addEvent(event: Event) {
         viewModelScope.launch {
             try {
-                // Prüfe ob ID existiert, bevor du das Event hinzufügst
+                // Prüft ob ID existiert.
                 if (event.id.isNullOrEmpty()) {
                     logMessage("EventViewModel: Cannot add event with null or empty ID")
                     return@launch
@@ -46,23 +46,7 @@ class EventViewModel(
 
     }
 
-//    fun loadFirebaseEvents(){
-//        viewModelScope.launch {
-//            try {
-//
-//                getFirebaseEventsUseCase.getFirebaseEventsFlow().collect { evetnts ->
-//                    _firebaseEventsData.value = evetnts
-//                }
-//                logMessage("EventViewModel: Events loaded")
-//
-//            }catch (e: Exception) {
-//                logMessage("EventViewModel: Error loading events: ${e.message}")
-//            }
-//
-//        }
-//    }
-
-    fun deleteEvent(eventId: String){
+    fun deleteEvent(eventId: String) {
         viewModelScope.launch {
             try {
                 getFirebaseEventsUseCase.deleteEvent(eventId)
@@ -105,7 +89,7 @@ class EventViewModel(
         userId: String,
         snackbarHostState: SnackbarHostState? = null,
         scope: CoroutineScope? = null
-    ){
+    ) {
 
         // Erstelle eine neue Dokument-Referenz mit automatisch generierter ID
         val newDocRef = fs.collection("events").document()
@@ -131,13 +115,13 @@ class EventViewModel(
             startData = start,
         )
 
-        // Speichert den Event in FirebaseEventDatabase
+        // Speichert den Event in FirebaseEventDatabase(Room)
         addEvent(event)
 
         // Speichere das Event mit der spezifischen Dokument-ID
         newDocRef.set(event)
             .addOnSuccessListener {
-                Log.d("CreateEventScreen", "Event erfolgreich erstellt mit ID: $documentId")
+                Log.d("CreateEventScreen", "Event erfolgreich erstellt")
                 // Feedback an Benutzer geben
                 scope?.launch {
                     snackbarHostState?.showSnackbar("Event erfolgreich erstellt!")
@@ -150,20 +134,6 @@ class EventViewModel(
                 }
             }
 
-
-//    fs.collection("events")
-//        .document().set(
-//            Event(
-//                userId = "2",
-//                imageUrl = "TestUrl",
-//                title = title,
-//                description = description,
-//                city = city,
-//                startData = start,
-//                location = Location("100", "200")
-//            )
-//        )
     }
-
 
 }

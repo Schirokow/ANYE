@@ -78,8 +78,6 @@ fun FirestoreEventDetailScreen(navController: NavController, id: String) {
     var firestoreEvent by remember { mutableStateOf<Event?>(null) }
 
 
-//    val viewModel: ContentDetailViewModel = koinViewModel()
-
     LaunchedEffect(id) {
         Log.d(TAG, "Loading festival for id: $id")
 
@@ -103,22 +101,8 @@ fun FirestoreEventDetailScreen(navController: NavController, id: String) {
 
     }
 
-//    LaunchedEffect(Unit) {
-//        viewModel.action.collect { action ->
-//            when (action) {
-//                is ContentDetailAction.Success -> {
-//                    snackbarHostState.showSnackbar(action.message)
-//                }
-//                is ContentDetailAction.Error -> {
-//                    snackbarHostState.showSnackbar(action.message)
-//                }
-//                ContentDetailAction.Initial -> Unit
-//            }
-//        }
-//    }
-
     val event = id
-//    val isFavorite by viewModel.isFavorite.collectAsState()
+
     if (firestoreEvent == null) {
         Box(
             modifier = Modifier
@@ -167,9 +151,9 @@ fun FirestoreEventDetailScreen(navController: NavController, id: String) {
                 // Hole Farbe aus den SnackbarData-Extras
                 val background = when (data.visuals.message) {
                     "Zu Favoriten hinzugefügt" -> Color(0xFF4CAF50)
-                    "Fehler beim laden von Event!" -> Color(0xFFF44336) // Rot
-                    "Fehler!" -> Color(0xFFF44336) // Rot
-                    else -> Color(0xFF2196F3) // Blau (Standard)
+                    "Fehler beim laden von Event!" -> Color(0xFFF44336)
+                    "Fehler!" -> Color(0xFFF44336)
+                    else -> Color(0xFF2196F3)
                 }
                 Snackbar(
                     modifier = Modifier

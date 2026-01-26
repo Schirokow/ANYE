@@ -290,14 +290,13 @@ fun FavoriteContent(navController: NavController, viewModel: FavoriteViewModel) 
         Surface(
             color = BackgroundColor.copy(alpha = 0.9f),
             modifier = Modifier.fillMaxSize(),
-            onClick = { /*selectedFestivalData = null */ }
+            onClick = { /*selectedEventlData = null */ }
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 100.dp),
-//                        .align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
@@ -314,7 +313,6 @@ fun FavoriteContent(navController: NavController, viewModel: FavoriteViewModel) 
                         modifier = Modifier
                             .graphicsLayer(scaleX = animateScale, scaleY = animateScale)
                             .fillMaxWidth(0.9f)
-//                            .fillMaxHeight(0.5f)
                             .height(300.dp)
                     )
 

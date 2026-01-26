@@ -223,10 +223,7 @@ fun EventScreen(navController: NavController) {
                             ) {
                                 FirebaseEventCard(
                                     event = event,
-                                    modifier = Modifier
-                                        .clickable {
-                                            Log.d(TAG, "Event clicked: ${event.title}")
-                                                   },
+                                    modifier = Modifier,
                                     onClick = {
                                         selectedEvent = event
                                     },
@@ -266,11 +263,7 @@ fun EventScreen(navController: NavController) {
                                         scaleY = animateScale
                                     )
                                     .fillMaxWidth(0.9f)
-                                    .height(300.dp)
-                                    .clickable {
-                                        // Optional: Zur Detailansicht navigieren
-                                        // navController.navigate("FirestoreEventDetailScreen/${event.id}")
-                                    },
+                                    .height(300.dp),
                                 onClick = {},
                                 isLarge = true,
                                 textIsLarge = true
@@ -287,7 +280,7 @@ fun EventScreen(navController: NavController) {
                                 .padding(24.dp)
                                 .size(34.dp)
                                 .clickable {
-                                    Log.d(TAG, "Close button clicked")
+                                    Log.d("EventScreen", "Close button clicked")
                                     selectedEvent = null
                                 }
                         )
@@ -302,7 +295,7 @@ fun EventScreen(navController: NavController) {
                                 .padding(24.dp)
                                 .size(34.dp)
                                 .clickable {
-                                    Log.d(TAG, "Delete button clicked for event: ${event.id}")
+                                    Log.d("EventScreen", "Delete button clicked for event: ${event.id}")
                                     eventToDelete = event.id
                                     showDeleteDialog = true
                                 }
